@@ -92,14 +92,14 @@ public:
     }
 
     void SetLeftRightMotorOutputs(float leftOutput, float rightOutput) {
-    	leftOutput*=1;// TODO speed; 
-    	rightOutput*=-1;// speed;
+    	leftOutput*=1;//speed; 
+    	rightOutput*=1;//speed;
         jag1->Set(leftOutput);
         jag2->Set(leftOutput);
         jag3->Set(rightOutput);
         jag4->Set(rightOutput);
         
-        DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line5, "Target: %f", speed*leftOutput);
+        DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line5, "Target: %f", leftOutput);
     }
 };
 
@@ -128,7 +128,7 @@ public:
         funcStick(ControllerB),
         iaClient(IMAGE_ANALYSIS_SERVER_IP, IMAGE_ANALYSIS_SERVER_PORT){
 
-    	// CANJaguar setup TODO enable encoders
+    	// CANJaguar setup 
     	driveLF=new CANJaguar(CanNumLF);//, CANJaguar::kSpeed);
     	driveLR=new CANJaguar(CanNumLR);//, CANJaguar::kSpeed);
     	driveRF=new CANJaguar(CanNumRF); // Temporarily no encoders on Right side
@@ -136,40 +136,34 @@ public:
     	//kicker=new CANJaguar(CanNumKick);//, CANJaguar::kPosition);
     	//ramp=new CANJaguar(CanNumRamp);
     	
-    	/* TODO re-enable encoders
-    	
+    	/*
     	driveLF->SetPID(PID_P, PID_I, PID_D);
     	driveLR->SetPID(PID_P, PID_I, PID_D);
-    	//driveRF->SetPID(PID_P, PID_I, PID_D);
-    	//driveRR->SetPID(PID_P, PID_I, PID_D);
-    	kicker->SetPID(PID_P, PID_I, PID_D);
+    	driveRF->SetPID(PID_P, PID_I, PID_D);
+    	driveRR->SetPID(PID_P, PID_I, PID_D);
 
     	driveLF->ConfigEncoderCodesPerRev(EncoderPulses); // Assume pulses = Codes
     	driveLR->ConfigEncoderCodesPerRev(EncoderPulses);
-    	//driveRF->ConfigEncoderCodesPerRev(EncoderPulses);
-    	//driveRR->ConfigEncoderCodesPerRev(EncoderPulses);
-    	kicker->ConfigEncoderCodesPerRev(KickerPulses);
+    	driveRF->ConfigEncoderCodesPerRev(EncoderPulses);
+    	driveRR->ConfigEncoderCodesPerRev(EncoderPulses);
     	
     	driveLF->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
     	driveLR->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
-    	//driveRF->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
-    	//driveRR->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
-    	kicker->SetPositionReference(CANJaguar::kPosRef_QuadEncoder); //*/// Quick disabling of encoders
+    	driveRF->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
+    	driveRR->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
     	
     	driveLF->EnableControl();
     	driveLR->EnableControl();
     	driveRF->EnableControl();
-    	driveRR->EnableControl(); 
-    	//kicker->EnableControl(0); // 0 as initial position. May be unnecessary to define this.
-    	//ramp->EnableControl(); // May be unnecessary for an encoderless can jag
+    	driveRR->EnableControl(); *///
     	
     	// Init Robotdrive
     	cDrive = new EncodedRobotDrive(driveLF, driveLR, driveRF, driveRR);
     	cDrive->SetMaxSpeed(10); // Set max speed to 10 ft/s default
         cDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,false);
         cDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,false);
-        cDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,true);
-        cDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,true);
+        cDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
+        cDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,false);
         cDrive->SetExpiration(0.1);
         
         // Victor setup
@@ -186,10 +180,10 @@ public:
         line6=DriverStationLCD::kUser_Line6;
         
         // Print version info
-        display->PrintfLine(line2, "Client test 2");
+        display->PrintfLine(line2, "Drive encoder test 2");
         display->UpdateLCD();        
         //Preferences::GetInstance()->PutInt("TestNumber", 1);
-        display->PrintfLine(line3, "Autocats assemble");
+        display->PrintfLine(line3, "Work plser");
         display->UpdateLCD();
                 
     }
@@ -254,23 +248,6 @@ public:
     	tower->Set(value);
 
         display->PrintfLine(line6, "Blocker: %f", value);
-    }
-    
-    
-    void KickerTest(){
-    	float value=driveStick.GetRawAxis(RightX);
-    	/*
-    	if(fabs(value)<0.08)
-    		value=0;
-    	if(value<0)
-    		kicker->Set(0.55); // TODO reset to position
-    	if(value>0)
-    		kicker->Set(-.55);
-    	if(value==0)
-    		kicker->Set(0);//*/
-    	
-    	display->PrintfLine(line6, "Test: %f", value);
-    	
     }
     
     void DriveIterate(){
