@@ -4,10 +4,13 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sockLib.h>
 #include <netinet/in.h>
 #include <sched.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#ifndef COMPUTER_TEST
+#include <sockLib.h>
 #include <vxWorks.h> 
 #include <errno.h>
 #include <fioLib.h>
@@ -17,6 +20,10 @@
 #include <sigLib.h>
 #include <usrLib.h>
 #include "WPILib.h"
+#else
+#include <iostream>
+using namespace std;
+#endif
 
 //NOTE: the static_cast<void*> are being put in for safety. In the past i've had problems with using void* as they are used in C
 
@@ -33,8 +40,10 @@ private:
 };
 
 static void* image_analysis_communication_thread(void *cls) {
+#ifndef COMPUTER_TEST
 	DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line1, "IA: About to connect");
 	DriverStationLCD::GetInstance()->UpdateLCD();
+#endif
 	while(true) {
         static_cast<ImageAnalysisClient*>(cls)->_threadEntry();
         sched_yield();
@@ -44,7 +53,9 @@ static void* image_analysis_communication_thread(void *cls) {
 
 ImageAnalysisClient::ImageAnalysisClient(const char *address, int port)
     : m_port(port) {
+    #ifndef COMPUTER_TEST
 	m_lcd = DriverStationLCD::GetInstance();
+	#endif
     m_address = strdup(address);
     memset(static_cast<void*>(&m_image_data), 0, sizeof(m_image_data));
     pthread_mutex_init(&m_lock, NULL);
@@ -52,7 +63,7 @@ ImageAnalysisClient::ImageAnalysisClient(const char *address, int port)
 }
 
 ImageAnalysisClient::~ImageAnalysisClient() {
-    pthread_kill(m_thread, 0);//TODO: is there a better way to cleanup?
+    //pthread_kill(m_thread, 0);//TODO: is there a better way to cleanup?
     pthread_mutex_destroy(&m_lock);
     free(m_address);
 }
@@ -79,15 +90,19 @@ void ImageAnalysisClient::setImageData(ImageData *data) {
 
 void ImageAnalysisClient::_threadEntry() {
 	//VxWorks strerror_r has a buffer overflow exploit
+#ifndef COMPUTER_TEST
 #define LCD_ERRNO(name)		do{strerror_r(errno, buffer/*, sizeof(buffer)-1*/);	\
 							m_lcd->PrintfLine(DriverStationLCD::kUser_Line1, "IA: %s(): %s", name, buffer);	\
 							m_lcd->UpdateLCD();}while(0)
 #define LCD_MSG(msg)		do{m_lcd->PrintfLine(DriverStationLCD::kUser_Line1, "IA: %s", msg);	\
 							m_lcd->UpdateLCD();}while(0)
+#else
+#define LCD_ERRNO(x)        do{perror(x);abort();}while(0)
+#define LCD_MSG(x)          (cerr<<"MSG: "<<(x)<<endl)
+#endif
 	
 	
-    char buffer[1024];
-    int buffer_len=0;
+    FILE *f;
     int sock=socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in dst;
     memset(static_cast<void*>(&dst), 0, sizeof(dst));
@@ -99,51 +114,41 @@ void ImageAnalysisClient::_threadEntry() {
     	LCD_ERRNO("connect()");
         return;
     }
+    f=fdopen(sock, "r+");
     while(true) {
         //This is the main loop
-        if(write(sock, REQUEST, sizeof(REQUEST))!=sizeof(REQUEST)) {
-        	LCD_ERRNO("write()");
-        	//While this could occur if the connection is still established, but the kernel buffer is just filled, that is an unlikely scenario.
-            close(sock);
+        if(fprintf(f, "%s", REQUEST)<0) {
+        	LCD_ERRNO("fprintf()");
+        	//While this might occur if the connection is still established, but the kernel buffer is just filled, that is an unlikely scenario.
+            fclose(f);
             return;
         }
-        while(true) {
-            //This is the read loop
-            if(buffer_len==sizeof(buffer)) {
-            	LCD_MSG("Buffer Overflow");
-                close(sock);
-                return;
-            }
-            int len=read(sock, buffer+buffer_len, sizeof(buffer)-buffer_len);
-            if(len<=0) {
-            	LCD_ERRNO("read()");
-                close(sock);
-                return;
-            }
-            buffer_len+=len;
-            int i;
-            //Linear search backward for linefeed. It's more likely that it's at the end of the buffer
-            for(i=buffer_len-1; i>=0 && buffer[i]!='\n'; i--) {}
-            if(buffer_len>0) {
-                //If it equals zero, then it's the first character
-                ImageData data;
-                buffer[i]='\0';//Replace the linefeed with the NULL terminator so that scanf will work
-                sscanf(buffer, "%f %f %f", &data.x, &data.y, &data.radius);
-                setImageData(&data);
-                if(i==buffer_len-1) {
-                    //The linefeed was the last character read, so just clear out the buffer
-                    buffer_len=0;
-                } else {
-                    //There is more stuff remaining in the buffer. Let's just move it to the beginning, so that we don't need a cyclic buffer.
-                    memmove(
-                        static_cast<void*>(buffer),
-                        static_cast<void*>(buffer+i),
-                        buffer_len-i
-                    );
-                    buffer_len=buffer_len-i;
+        fflush(f);
+        ImageData data;
+        float parts[3];//Because of padding, it's safer to not just assume that the struct is in the same format as this array.
+        for(int part_idx=0;part_idx<(sizeof(parts)/sizeof(float));part_idx++){
+            char number_buffer[64];
+            int buffer_pos=0;
+            while(true){
+                char ch=fgetc(f);
+                if(ch==EOF){
+                    LCD_ERRNO("fgetc()");
+                    fclose(f);
+                    return;
+                }else if(isspace(ch)){
+                    number_buffer[buffer_pos]='\0';
+                    break;
+                }else{
+                    number_buffer[buffer_pos]=ch;
                 }
+                buffer_pos++;
             }
+            parts[part_idx]=atof(number_buffer);
         }
+        data.x=parts[0];
+        data.y=parts[1];
+        data.radius=parts[2];
+        setImageData(&data);
     }
 #undef LCD_ERRNO
 #undef LCD_MSG
