@@ -9,6 +9,8 @@
 
 //// HEAD - Includes and Defines
 
+///No jokes for you
+
 /// Includes
 #include "WPILib.h" // The WPI Library
 #include <sysLib.h>	// Stuff
@@ -16,12 +18,6 @@
 #include <math.h>	// Maths
 
 
-
-
-/// Defines
-#define Pi					(3.1415926535898) // Pi to 13 places
-#define Tao					(2*Pi) // Tao = 2 Pi
-#define Octopi				(8*Pi) // Or is it octopodes?
 
 // XBOX Controller button and axis numbers
 #define ButtonX 			(3) // XBox Controller X Button number for getRawButton() or getRawAxis()
@@ -255,7 +251,7 @@ static void connectThread(){ // Turns out connect() already exists so we can't u
 		dest.sin_addr.s_addr = htonl(INADDR_LOOPBACK); /* set destination IP number - localhost, 127.0.0.1*/ 
 		dest.sin_port = htons(Port);                /* set destination port number */
 		
-		// Connect!
+		// Connect
 		connect(mySocket, (struct sockaddr *) &dest, sizeof(struct sockaddr));
 		
 		char data[MaxLength]; // Data array of arbitrary length
@@ -550,5 +546,3 @@ public:
 
 START_ROBOT_CLASS(MyRobot)
 ;
-
-// Heatdeath of the universe, and snacks
