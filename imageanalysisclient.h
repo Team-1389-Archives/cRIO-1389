@@ -22,7 +22,7 @@ public:
     void _threadEntry();//This method must be public, thought it should not be called
 private:
     void setImageData(ImageData *data);
-    const char *m_address;
+    char *m_address;
     int m_port;
     ImageData m_image_data;
     pthread_t m_thread;

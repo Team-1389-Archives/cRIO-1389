@@ -40,7 +40,8 @@ static void* image_analysis_communication_thread(void *cls) {
 }
 
 ImageAnalysisClient::ImageAnalysisClient(const char *address, int port)
-    : m_address(address), m_port(port) {
+    : m_port(port) {
+    m_address = strdup(address);
     memset(static_cast<void*>(&m_image_data), 0, sizeof(m_image_data));
     pthread_mutex_init(&m_lock, NULL);
     pthread_create(&m_thread, NULL, image_analysis_communication_thread, static_cast<void*>(this));
@@ -49,6 +50,7 @@ ImageAnalysisClient::ImageAnalysisClient(const char *address, int port)
 ImageAnalysisClient::~ImageAnalysisClient() {
     pthread_kill(m_thread, 0);//TODO: is there a better way to cleanup?
     pthread_mutex_destroy(&m_lock);
+    free(m_address);
 }
 
 void ImageAnalysisClient::copyImageData(ImageData *id) {
