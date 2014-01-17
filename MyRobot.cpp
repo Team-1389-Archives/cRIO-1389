@@ -1,5 +1,6 @@
 #include "WPILib.h"
 #include "imageanalysisclient.h"
+#include <Math.h>
 //#include "SpeedController.h"
 
 class MyRobotDrive : public RobotDrive {
@@ -60,10 +61,10 @@ public:
 
     void Autonomous() {
 //These macros are for testing purposes only
-#define CENTER_LINE         (IDK)
-#define CENTER_THRESHOLD    (IDK)
-#define RADIUS_TARGET       (IDK)
-#define RADIUS_THRESHOLD    (IDK)
+#define CENTER_LINE         (320)
+#define CENTER_THRESHOLD    (20)
+#define RADIUS_TARGET       (60)
+#define RADIUS_THRESHOLD    (20)
         while(IsAutonomous()) {
             ImageData data;
             iaClient.copyImageData(&data);

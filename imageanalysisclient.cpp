@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sockLib.h>
 #include <netinet/in.h>
 #include <sched.h>
 #include <stdio.h>
