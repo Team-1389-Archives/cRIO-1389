@@ -1,14 +1,6 @@
 #include "WPILib.h"
-#include "sysLib.h"
-#include "taskLib.h"
-#include "semLib.h"
+#include "imageanalysisclient.h"
 //#include "SpeedController.h"
-/**
- * This is a demo program showing the use of the RobotBase class.
- * The SimpleRobot class is the base of a robot application that will automatically call your
- * Autonomous and OperatorControl methods at the right time as controlled by the switches on
- * the driver station or the field controls.
- */
 
 class MyRobotDrive : public RobotDrive{
     //CANJaguar* jag1, jag2, jag3, jag4;
@@ -20,7 +12,8 @@ class MyRobotDrive : public RobotDrive{
 public:
     /* left left right right */
    
-    MyRobotDrive(Jaguar* j1,Jaguar* j2,Jaguar* j3,Jaguar* j4):RobotDrive((SpeedController *)NULL,(SpeedController *)NULL)
+    MyRobotDrive(Jaguar* j1,Jaguar* j2,Jaguar* j3,Jaguar* j4):
+		RobotDrive((SpeedController *)NULL,(SpeedController *)NULL)
     {       
         jag1 = j1;
         jag2 = j2;
@@ -34,36 +27,6 @@ public:
         jag3->Set(rightOutput);
         jag4->Set(rightOutput);
     }
-};
-struct ImageData{
-    float x;
-    float y;
-    float radius;
-};
-
-class ImageAnalysisCommunication;
-
-static void image_analysis_communication_thread(ImageAnalysisCommunication *cls){
-    cls->_thread();
-}
-
-#define STACK_SIZE      (8192)
-class ImageAnalysisCommunication{
-public:
-    ImageAnalysisCommunication(const char *address, int port): address(m_address), port(m_port){
-        m_task_id=taskSpawn("ImageAnalysisCommunication", 5, VX_FX_TASK, STACK_SIZE, (FUNCPTR)image_analysis_communication_thread, (int)this, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    }
-    virtual ~ImageAnalysisCommunication(){
-        taskDelete(m_task_id);
-    }
-    virtual void _thread(){
-
-    }
-private:
-    const char m_address;
-    int m_port;
-    ImageData m_image_data;
-    int m_task_id;
 };
 
 class RobotDemo : public SimpleRobot
