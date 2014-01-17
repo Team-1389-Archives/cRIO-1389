@@ -8,6 +8,14 @@
 #include <netinet/in.h>
 #include <sched.h>
 #include <stdio.h>
+#include <vxWorks.h> 
+#include <errno.h>
+#include <fioLib.h>
+#include <hostLib.h> 
+#include <inetLib.h> 
+#include <signal.h>
+#include <sigLib.h>
+#include <usrLib.h>
 
 //NOTE: the static_cast<void*> are being put in for safety. In the past i've had problems with using void* as they are used in C
 
