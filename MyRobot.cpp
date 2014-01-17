@@ -36,13 +36,15 @@ class RobotDemo : public SimpleRobot {
     Jaguar jag2;
     Jaguar jag3;
     Jaguar jag4;
+    ImageAnalysisClient iaClient;
 public:
     RobotDemo():
         stick(1),
         jag1(1),
         jag2(2),
         jag3(3),
-        jag4(4) {
+        jag4(4),
+        iaClient(IMAGE_ANALYSIS_SERVER_IP, IMAGE_ANALYSIS_SERVER_PORT){
 
         //jag2(2,CANJaguar::kVoltage);
         //jag3(3,CANJaguar::kVoltage);
