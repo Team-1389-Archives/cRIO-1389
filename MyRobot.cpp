@@ -2,26 +2,25 @@
 #include "imageanalysisclient.h"
 //#include "SpeedController.h"
 
-class MyRobotDrive : public RobotDrive{
+class MyRobotDrive : public RobotDrive {
     //CANJaguar* jag1, jag2, jag3, jag4;
     Jaguar* jag1;
     Jaguar* jag2;
     Jaguar* jag3;
     Jaguar* jag4;
-   
+
 public:
     /* left left right right */
-   
+
     MyRobotDrive(Jaguar* j1,Jaguar* j2,Jaguar* j3,Jaguar* j4):
-		RobotDrive((SpeedController *)NULL,(SpeedController *)NULL)
-    {       
+        RobotDrive((SpeedController *)NULL,(SpeedController *)NULL) {
         jag1 = j1;
         jag2 = j2;
         jag3 = j3;
         jag4 = j4;
     }
-   
-    void SetLeftRightMotorOutputs(float leftOutput, float rightOutput){
+
+    void SetLeftRightMotorOutputs(float leftOutput, float rightOutput) {
         jag1->Set(leftOutput);
         jag2->Set(leftOutput);
         jag3->Set(rightOutput);
@@ -29,8 +28,7 @@ public:
     }
 };
 
-class RobotDemo : public SimpleRobot
-{
+class RobotDemo : public SimpleRobot {
     MyRobotDrive* cDrive;
     //RobotDrive myRobot; // robot drive system
     Joystick stick; // only joystick
@@ -39,14 +37,13 @@ class RobotDemo : public SimpleRobot
     Jaguar jag3;
     Jaguar jag4;
 public:
-    RobotDemo():       
+    RobotDemo():
         stick(1),
         jag1(1),
         jag2(2),
         jag3(3),
-        jag4(4)
-    {
-       
+        jag4(4) {
+
         //jag2(2,CANJaguar::kVoltage);
         //jag3(3,CANJaguar::kVoltage);
         //jag4(4,CANJaguar::kVoltage);
@@ -59,22 +56,42 @@ public:
         //myRobot.SetInvertedMotor(RobotDrive::kRearLeftMotor,true);
     }
 
-    /**
-     * Drive left & right motors for 2 seconds then stop
-     */
-    void Autonomous()
-    {
-        
+    void Autonomous() {
+//These macros are for testing purposes only
+#define CENTER_LINE         (IDK)
+#define CENTER_THRESHOLD    (IDK)
+#define RADIUS_TARGET       (IDK)
+#define RADIUS_THRESHOLD    (IDK)
+        while(IsAutonomous()) {
+            ImageData data;
+            iaClient.copyImageData(&data);
+            float move=0;
+            float rotate=0;
+            if(fabs(data.x-CENTER_LINE)>CENTER_THRESHOLD) {
+                if(data.x<CENTER_LINE) {
+                    rotate=1.0;
+                } else {
+                    rotate=-1.0;
+                }
+            }
+            if(fabs(data.radius-RADIUS_TARGET)>RADIUS_THRESHOLD) {
+                if(data.radius>RADIUS_THRESHOLD) {
+                    move=1.0;
+                } else {
+                    move=-1.0;
+                }
+            }
+            cDrive->ArcadeDrive(move, rotate);
+        }
     }
+
 
     /**
      * Runs the motors with arcade steering.
      */
-    void OperatorControl()
-    {
-    //    myRobot.SetSafetyEnabled(true);
-        while (IsOperatorControl())
-        {
+    void OperatorControl() {
+        //    myRobot.SetSafetyEnabled(true);
+        while (IsOperatorControl()) {
             cDrive->ArcadeDrive(stick);
             Wait(0.005);                // wait for a motor update time
         }
