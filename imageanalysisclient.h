@@ -12,7 +12,6 @@ struct ImageData {
     float radius;
 };
 
-#define STACK_SIZE      (8192)
 class ImageAnalysisClient {
 public:
     ImageAnalysisClient(const char *address, int port);
