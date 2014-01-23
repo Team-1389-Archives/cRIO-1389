@@ -3,6 +3,20 @@
 #include <Math.h>
 //#include "SpeedController.h"
 
+// XBOX Controller button and axis numbers
+#define ButtonX 			(3) // XBox Controller X Button number for getRawButton() or getRawAxis()
+#define ButtonA				(1) // XBox Controller A Button number
+#define ButtonB				(2) // XBox Controller B Button number
+#define ButtonY				(4) // XBox Controller Y Button number
+#define BumperL				(5) // XBox Controller  Left Bumper number
+#define BumperR				(6) // XBox Controller Right Bumper number
+
+#define LeftY				(2) // XBox Controller  Left Y Axis number
+#define LeftX				(1) // XBox Controller  Left X Axis number
+#define RightY				(5) // XBox Controller Right Y Axis number
+#define RightX				(4) // XBox Controller Right X Axis number
+
+
 class MyRobotDrive : public RobotDrive {
     //CANJaguar* jag1, jag2, jag3, jag4;
     Jaguar* jag1;
@@ -10,10 +24,14 @@ class MyRobotDrive : public RobotDrive {
     Jaguar* jag3;
     Jaguar* jag4;
 
-public:
-    /* left left right right */
+public: 
+    
+	// RobotDrive can already accept four jaguars as its motors, this custom class seems unnecessary
 
+    /* (front) left, (rear) left, (front) right, (rear) right */
+    
     MyRobotDrive(Jaguar* j1,Jaguar* j2,Jaguar* j3,Jaguar* j4):
+    	
         RobotDrive((SpeedController *)NULL,(SpeedController *)NULL) {
         jag1 = j1;
         jag2 = j2;
@@ -30,17 +48,23 @@ public:
 };
 
 class RobotDemo : public SimpleRobot {
-    MyRobotDrive* cDrive;
+	
+    MyRobotDrive* cDrive; // Custom robotdrive object for 4 jags
+    
     //RobotDrive myRobot; // robot drive system
-    Joystick stick; // only joystick
+    
+    Joystick driveStick, funcStick; // The two XBOX controllers
+    
+    
     Jaguar jag1;
     Jaguar jag2;
     Jaguar jag3;
     Jaguar jag4;
     ImageAnalysisClient iaClient;
 public:
-    RobotDemo():
-        stick(1),
+    RobotDemo(): // TODO replace port numbers with define macros
+        driveStick(1),
+        funcStick(2),
         jag1(1),
         jag2(2),
         jag3(3),
@@ -60,7 +84,9 @@ public:
     }
 
     void Autonomous() {
-//These macros are for testing purposes only
+//These macros are for testing purposes only 
+    				// Why?
+    	
 #define CENTER_LINE         (320)
 #define CENTER_THRESHOLD    (20)
 #define RADIUS_TARGET       (60)
@@ -94,18 +120,32 @@ public:
      */
     void OperatorControl() {
         //    myRobot.SetSafetyEnabled(true);
+    	
+    	double x, y;
+    	
         while (IsOperatorControl()) {
-            cDrive->ArcadeDrive(stick);
+        	
+        	x=driveStick.GetRawAxis(LeftX);
+        	y=-driveStick.GetRawAxis(LeftY); // The xbox controller uses down as positive for joysticks
+        	
+        	// Using ArcadeDrive with two numbers (move and rotate) works better than passing
+        	//		the xbox joystick object, and is easier to modify to apply a speed modifier.
+            cDrive->ArcadeDrive(x, y);
+            
+            
             Wait(0.005);                // wait for a motor update time
         }
-        delete(cDrive);
+        
+        //delete(cDrive); // TODO verify commenting this line is correct
+        // Unsure that we need to delete cDrive, and suspect it is causing issues
+        // 		where robot does not drive after teleop is disabled and re-enabled, requiring a reboot
     }
 
     /**
      * Runs during test mode
      */
     void Test() {
-
+    	
     }
 };
 
