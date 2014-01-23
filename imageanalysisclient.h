@@ -2,7 +2,7 @@
 #define IMAGE_ANALYSIS_CLIENT_H
 #include <pthread.h>
 
-#define IMAGE_ANALYSIS_SERVER_IP		("10.13.89.6")
+#define IMAGE_ANALYSIS_SERVER_IP		("10.13.89.9")
 //See the FIRST FMS White Paper to find out what ports are available http://bitly.com/1abqwix
 #define IMAGE_ANALYSIS_SERVER_PORT		(443)
 
