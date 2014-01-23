@@ -121,16 +121,24 @@ public:
     void OperatorControl() {
         //    myRobot.SetSafetyEnabled(true);
     	
+    	// TODO consider floats vs doubles
     	double x, y;
+    	double speedMod; // Speed modifier
     	
         while (IsOperatorControl()) {
+        	speedMod=.6;
+        	if(driveStick.GetRawButton(BumperL)) // Hold left bumper to go at full speed
+        		speedMod=1;
+        	if(driveStick.GetRawButton(BumperR)) // Hold right bumper to go at 30% or 1/2 normal speed
+        		speedMod=.3; // Is checked second so in case both bumpers are held, slower speed is used
         	
         	x=driveStick.GetRawAxis(LeftX);
         	y=-driveStick.GetRawAxis(LeftY); // The xbox controller uses down as positive for joysticks
         	
+        	
         	// Using ArcadeDrive with two numbers (move and rotate) works better than passing
         	//		the xbox joystick object, and is easier to modify to apply a speed modifier.
-            cDrive->ArcadeDrive(x, y);
+            cDrive->ArcadeDrive(speedMod*x, speedMod*y);
             
             
             Wait(0.005);                // wait for a motor update time
