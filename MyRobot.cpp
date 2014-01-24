@@ -126,11 +126,11 @@ public:
     	double speedMod; // Speed modifier
     	
         while (IsOperatorControl()) {
-        	speedMod=.6;
-        	if(driveStick.GetRawButton(BumperL)) // Hold left bumper to go at full speed
+        	speedMod=.65;
+        	if(driveStick.GetRawButton(BumperR)) // Hold Right bumper to go at full speed
         		speedMod=1;
-        	if(driveStick.GetRawButton(BumperR)) // Hold right bumper to go at 30% or 1/2 normal speed
-        		speedMod=.3; // Is checked second so in case both bumpers are held, slower speed is used
+        	if(driveStick.GetRawButton(BumperL)) // Hold Left bumper to go at 30% or 1/2 normal speed
+        		speedMod=.5; // Is checked second so in case both bumpers are held, slower speed is used
         	
         	x=driveStick.GetRawAxis(LeftX);
         	y=-driveStick.GetRawAxis(LeftY); // The xbox controller uses down as positive for joysticks
