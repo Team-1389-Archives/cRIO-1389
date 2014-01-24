@@ -1,6 +1,7 @@
 #ifndef IMAGE_ANALYSIS_CLIENT_H
 #define IMAGE_ANALYSIS_CLIENT_H
 #include <pthread.h>
+#include <WPILib.h>
 
 #define IMAGE_ANALYSIS_SERVER_IP		("10.13.89.9")
 //See the FIRST FMS White Paper to find out what ports are available http://bitly.com/1abqwix
@@ -27,6 +28,7 @@ private:
     ImageData m_image_data;
     pthread_t m_thread;
     pthread_mutex_t m_lock;
+    DriverStationLCD *m_lcd;
 };
 
 #endif

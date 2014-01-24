@@ -16,6 +16,7 @@
 #include <signal.h>
 #include <sigLib.h>
 #include <usrLib.h>
+#include "WPILib.h"
 
 //NOTE: the static_cast<void*> are being put in for safety. In the past i've had problems with using void* as they are used in C
 
@@ -32,7 +33,9 @@ private:
 };
 
 static void* image_analysis_communication_thread(void *cls) {
-    while(true) {
+	DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line1, "IA: About to connect");
+	DriverStationLCD::GetInstance()->UpdateLCD();
+	while(true) {
         static_cast<ImageAnalysisClient*>(cls)->_threadEntry();
         sched_yield();
     }
@@ -41,6 +44,7 @@ static void* image_analysis_communication_thread(void *cls) {
 
 ImageAnalysisClient::ImageAnalysisClient(const char *address, int port)
     : m_port(port) {
+	m_lcd = DriverStationLCD::GetInstance();
     m_address = strdup(address);
     memset(static_cast<void*>(&m_image_data), 0, sizeof(m_image_data));
     pthread_mutex_init(&m_lock, NULL);
@@ -74,6 +78,14 @@ void ImageAnalysisClient::setImageData(ImageData *data) {
 #define REQUEST		("ask\n")
 
 void ImageAnalysisClient::_threadEntry() {
+	//VxWorks strerror_r has a buffer overflow exploit
+#define LCD_ERRNO(name)		do{strerror_r(errno, buffer/*, sizeof(buffer)-1*/);	\
+							m_lcd->PrintfLine(DriverStationLCD::kUser_Line1, "IA: %s(): %s", name, buffer);	\
+							m_lcd->UpdateLCD();}while(0)
+#define LCD_MSG(msg)		do{m_lcd->PrintfLine(DriverStationLCD::kUser_Line1, "IA: %s", msg);	\
+							m_lcd->UpdateLCD();}while(0)
+	
+	
     char buffer[1024];
     int buffer_len=0;
     int sock=socket(AF_INET, SOCK_STREAM, 0);
@@ -84,23 +96,27 @@ void ImageAnalysisClient::_threadEntry() {
     dst.sin_port=htons(m_port);
 
     if(connect(sock, (struct sockaddr*)&dst, sizeof(struct sockaddr))==-1) {
+    	LCD_ERRNO("connect()");
         return;
     }
     while(true) {
         //This is the main loop
         if(write(sock, REQUEST, sizeof(REQUEST))!=sizeof(REQUEST)) {
-            //While this could occur if the connection is still established, but the kernel buffer is just filled, that is an unlikely scenario.
+        	LCD_ERRNO("write()");
+        	//While this could occur if the connection is still established, but the kernel buffer is just filled, that is an unlikely scenario.
             close(sock);
             return;
         }
         while(true) {
             //This is the read loop
             if(buffer_len==sizeof(buffer)) {
+            	LCD_MSG("Buffer Overflow");
                 close(sock);
                 return;
             }
             int len=read(sock, buffer+buffer_len, sizeof(buffer)-buffer_len);
             if(len<=0) {
+            	LCD_ERRNO("read()");
                 close(sock);
                 return;
             }
@@ -129,4 +145,6 @@ void ImageAnalysisClient::_threadEntry() {
             }
         }
     }
+#undef LCD_ERRNO
+#undef LCD_MSG
 }
