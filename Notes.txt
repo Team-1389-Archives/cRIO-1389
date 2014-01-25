@@ -1,0 +1,11 @@
+Attempted to switch to a command-based robot structure, which would let us use SmartDashboard to choose which command runs for autonomous. 
+
+Commands aren't passed motor objects by the main class however, they have to Require a subsystem.
+
+Subsystems get their motors and whatnot from the robot map
+(http://wpilib.screenstepslive.com/s/3120/m/7952/l/80288-simple-subsystems)
+
+However, there is *no* documentation on creating a robot map. This combined with the relative obtuseness of the whole command-based robot system has lead me to abandon this attempted conversion.
+
+Tara
+5:12 PM 1/25/2014
