@@ -94,8 +94,12 @@ public:
         while(IsAutonomous()) {
             ImageData data;
             iaClient.copyImageData(&data);
+            DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line2, "IA: %d, %d, %d", (int)data.x, (int)data.y, (int)data.radius);
+
             float move=0;
             float rotate=0;
+            
+            /*
             if(fabs(data.x-CENTER_LINE)>CENTER_THRESHOLD) {
                 if(data.x<CENTER_LINE) {
                     rotate=1.0;
@@ -110,7 +114,22 @@ public:
                     move=-1.0;
                 }
             }
+            
+            DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line3, "Move: %d", move);
+            DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line4, "Rotate: %d", rotate);
+            //*/
+            DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line3, "Data: %d", (int)data.x);
+                        
+            if(data.x==1)
+            	move=1;
+            if(data.x==2)
+            	rotate=1;
+            DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line4, "Move: %d", (int)move);
+            DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line5, "Rotate: %d", (int)rotate);
+                        
+            DriverStationLCD::GetInstance()->UpdateLCD();
             cDrive->ArcadeDrive(move, rotate);
+            
         }
     }
 
@@ -138,7 +157,10 @@ public:
         	
         	// Using ArcadeDrive with two numbers (move and rotate) works better than passing
         	//		the xbox joystick object, and is easier to modify to apply a speed modifier.
-            cDrive->ArcadeDrive(speedMod*x, speedMod*y);
+            
+        	// TODO use move then rotate, not rotate then move
+        	// TODO fix one drive side being inverted
+        	cDrive->ArcadeDrive(speedMod*x, speedMod*y);
             
             
             Wait(0.005);                // wait for a motor update time
