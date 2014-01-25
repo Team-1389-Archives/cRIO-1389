@@ -105,7 +105,7 @@ public:
 #define CENTER_THRESHOLD    (20)
 #define RADIUS_TARGET       (60)
 #define RADIUS_THRESHOLD    (20)
-        while(IsAutonomous()) {
+        while(IsAutonomous()&&IsEnabled()) {
             ImageData data;
             iaClient.copyImageData(&data);
             display->PrintfLine(line2, "IA: %d, %d, %d", (int)data.x, (int)data.y, (int)data.radius);
@@ -138,8 +138,8 @@ public:
             	move=1;
             if(data.x==2)
             	rotate=1;
-            display->PrintfLine(line4, "Move: %d", (int)move);
-            display->PrintfLine(line5, "Rotate: %d", (int)rotate);
+            display->PrintfLine(line4, "Move: %f", (float)move);
+            display->PrintfLine(line5, "Rotate: %f", (float)rotate);
                         
             display->UpdateLCD();
             cDrive->ArcadeDrive(move, rotate);
@@ -158,7 +158,7 @@ public:
     	double x, y;
     	double speedMod; // Speed modifier
     	
-        while (IsOperatorControl()) {
+        while (IsOperatorControl()&&IsEnabled()) {
         	speedMod=.65;
         	if(driveStick.GetRawButton(BumperR)) // Hold Right bumper to go at full speed
         		speedMod=1;
@@ -174,15 +174,12 @@ public:
             
         	// TODO use move then rotate, not rotate then move
         	// TODO fix one drive side being inverted
-        	cDrive->ArcadeDrive(speedMod*x, speedMod*y);
+        	cDrive->ArcadeDrive(speedMod*y, speedMod*x);
             
             
             Wait(0.005);                // wait for a motor update time
         }
         
-        //delete(cDrive); // TODO verify commenting this line is correct
-        // Unsure that we need to delete cDrive, and suspect it is causing issues
-        // 		where robot does not drive after teleop is disabled and re-enabled, requiring a reboot
     }
 
     /**
