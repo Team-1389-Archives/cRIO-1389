@@ -145,6 +145,12 @@ public:
             cDrive->ArcadeDrive(move, rotate);
             
         }
+        
+        jag1.Set(0);
+        jag2.Set(0);
+        jag3.Set(0);
+        jag4.Set(0);
+        
     }
 
 
@@ -179,6 +185,11 @@ public:
             
             Wait(0.005);                // wait for a motor update time
         }
+
+        jag1.Set(0);
+        jag2.Set(0);
+        jag3.Set(0);
+        jag4.Set(0);
         
     }
 
@@ -186,7 +197,18 @@ public:
      * Runs during test mode
      */
     void Test() {
+    	while(IsTest()&&IsEnabled()){
+
+    		cDrive->ArcadeDrive(.6, 0); // Test if the robot drives in the right direction forward
+            
+    	}
+
     	
+        jag1.Set(0);
+        jag2.Set(0);
+        jag3.Set(0);
+        jag4.Set(0);
+        
     }
 };
 
