@@ -4,6 +4,9 @@
 //#include "SpeedController.h"
 
 // XBOX Controller button and axis numbers
+#define ControllerA			(1) // Port for primary controller, drive controller
+#define ControllerB			(2) // Port for secondary controller, functionality
+
 #define ButtonX 			(3) // XBox Controller X Button number for getRawButton() or getRawAxis()
 #define ButtonA				(1) // XBox Controller A Button number
 #define ButtonB				(2) // XBox Controller B Button number
@@ -49,9 +52,8 @@ public:
 
 class RobotDemo : public SimpleRobot {
 	
-    MyRobotDrive* cDrive; // Custom robotdrive object for 4 jags
+    RobotDrive* cDrive; // Generic robotdrive object for 4 jags
     
-    //RobotDrive myRobot; // robot drive system
     
     Joystick driveStick, funcStick; // The two XBOX controllers
     
@@ -61,10 +63,16 @@ class RobotDemo : public SimpleRobot {
     Jaguar jag3;
     Jaguar jag4;
     ImageAnalysisClient iaClient;
+    
+    
+    // These save time typing out DriverStationLCD repeatedly for displays
+    DriverStationLCD *display;
+    DriverStationLCD::Line line1, line2, line3, line4, line5, line6;
+    
 public:
     RobotDemo(): // TODO replace port numbers with define macros
-        driveStick(1),
-        funcStick(2),
+        driveStick(ControllerA),
+        funcStick(ControllerB),
         jag1(1),
         jag2(2),
         jag3(3),
@@ -74,13 +82,19 @@ public:
         //jag2(2,CANJaguar::kVoltage);
         //jag3(3,CANJaguar::kVoltage);
         //jag4(4,CANJaguar::kVoltage);
-        //myRobot(&jag1,&jag2,&jag3,&jag4);
-        //stick(1);        // as they are declared above.
         cDrive = new MyRobotDrive(&jag1,&jag2,&jag3,&jag4);
+        cDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,true);
+        cDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,true);
         cDrive->SetExpiration(0.1);
-        //myRobot.SetExpiration(0.1);
-        //myRobot.SetInvertedMotor(RobotDrive::kFrontLeftMotor,true);
-        //myRobot.SetInvertedMotor(RobotDrive::kRearLeftMotor,true);
+        
+        display=DriverStationLCD::GetInstance();
+        line1=DriverStationLCD::kUser_Line1;
+        line2=DriverStationLCD::kUser_Line2;
+        line3=DriverStationLCD::kUser_Line3;
+        line4=DriverStationLCD::kUser_Line4;
+        line5=DriverStationLCD::kUser_Line5;
+        line6=DriverStationLCD::kUser_Line6;
+                
     }
 
     void Autonomous() {
@@ -94,7 +108,7 @@ public:
         while(IsAutonomous()) {
             ImageData data;
             iaClient.copyImageData(&data);
-            DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line2, "IA: %d, %d, %d", (int)data.x, (int)data.y, (int)data.radius);
+            display->PrintfLine(line2, "IA: %d, %d, %d", (int)data.x, (int)data.y, (int)data.radius);
 
             float move=0;
             float rotate=0;
@@ -115,19 +129,19 @@ public:
                 }
             }
             
-            DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line3, "Move: %d", move);
-            DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line4, "Rotate: %d", rotate);
+            display->PrintfLine(line3, "Move: %d", move);
+            display->PrintfLine(line4, "Rotate: %d", rotate);
             //*/
-            DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line3, "Data: %d", (int)data.x);
+            display->PrintfLine(line3, "Data: %d", (int)data.x);
                         
             if(data.x==1)
             	move=1;
             if(data.x==2)
             	rotate=1;
-            DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line4, "Move: %d", (int)move);
-            DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line5, "Rotate: %d", (int)rotate);
+            display->PrintfLine(line4, "Move: %d", (int)move);
+            display->PrintfLine(line5, "Rotate: %d", (int)rotate);
                         
-            DriverStationLCD::GetInstance()->UpdateLCD();
+            display->UpdateLCD();
             cDrive->ArcadeDrive(move, rotate);
             
         }
