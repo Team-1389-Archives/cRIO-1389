@@ -95,7 +95,9 @@ public:
         line5=DriverStationLCD::kUser_Line5;
         line6=DriverStationLCD::kUser_Line6;
         
-        SmartDashboard::PutNumber("TestNumber", 1);
+        display->PrintfLine(line1, "Test...");
+        display->UpdateLCD();
+        //SmartDashboard::PutNumber("TestNumber", 1);
                 
     }
 
@@ -134,7 +136,7 @@ public:
             display->PrintfLine(line3, "Move: %d", move);
             display->PrintfLine(line4, "Rotate: %d", rotate);
             //*/
-            double test=SmartDashboard::GetNumber("TestNumber");
+            double test=1;//SmartDashboard::GetNumber("TestNumber");
             
             display->PrintfLine(line3, "Test: %f", test);
                         
@@ -186,7 +188,7 @@ public:
         	// TODO fix one drive side being inverted
         	cDrive->ArcadeDrive(speedMod*y, speedMod*x);
 
-        	double test=SmartDashboard::GetNumber("TestNumber");
+        	double test=1;//SmartDashboard::GetNumber("TestNumber");
         	
         	display->PrintfLine(line1, "Teleop");
         	display->PrintfLine(line2, "TestNumber: %f", test);
