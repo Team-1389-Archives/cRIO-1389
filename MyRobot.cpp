@@ -185,7 +185,15 @@ public:
         	// TODO use move then rotate, not rotate then move
         	// TODO fix one drive side being inverted
         	cDrive->ArcadeDrive(speedMod*y, speedMod*x);
-            
+
+        	double test=SmartDashboard::GetNumber("TestNumber");
+        	
+        	display->PrintfLine(line1, "Teleop");
+        	display->PrintfLine(line2, "TestNumber: %f", test);
+            display->PrintfLine(line3, "Move: %f", speedMod*y);
+            display->PrintfLine(line4, "Rotate: %f", speedMod*x);
+                        
+            display->UpdateLCD();
             
             Wait(0.005);                // wait for a motor update time
         }
