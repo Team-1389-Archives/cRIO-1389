@@ -94,6 +94,8 @@ public:
         line4=DriverStationLCD::kUser_Line4;
         line5=DriverStationLCD::kUser_Line5;
         line6=DriverStationLCD::kUser_Line6;
+        
+        SmartDashboard::PutNumber("TestNumber", 1);
                 
     }
 
@@ -132,14 +134,16 @@ public:
             display->PrintfLine(line3, "Move: %d", move);
             display->PrintfLine(line4, "Rotate: %d", rotate);
             //*/
-            display->PrintfLine(line3, "Data: %d", (int)data.x);
+            double test=SmartDashboard::GetNumber("TestNumber");
+            
+            display->PrintfLine(line3, "Test: %f", test);
                         
-            if(data.x==1)
+            if(test==1)
             	move=1;
-            if(data.x==2)
+            if(test==2)
             	rotate=1;
-            display->PrintfLine(line4, "Move: %f", (float)move);
-            display->PrintfLine(line5, "Rotate: %f", (float)rotate);
+            display->PrintfLine(line4, "Move: %f", move);
+            display->PrintfLine(line5, "Rotate: %f", rotate);
                         
             display->UpdateLCD();
             cDrive->ArcadeDrive(move, rotate);
