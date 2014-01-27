@@ -82,9 +82,11 @@ public:
         //jag2(2,CANJaguar::kVoltage);
         //jag3(3,CANJaguar::kVoltage);
         //jag4(4,CANJaguar::kVoltage);
-        cDrive = new MyRobotDrive(&jag1,&jag2,&jag3,&jag4);
-        cDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,true);
-        cDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,true);
+        cDrive = new RobotDrive(&jag1,&jag2,&jag3,&jag4);
+        cDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,false);
+        cDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,false);
+        cDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
+        cDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,false);
         cDrive->SetExpiration(0.1);
         
         display=DriverStationLCD::GetInstance();
@@ -95,9 +97,13 @@ public:
         line5=DriverStationLCD::kUser_Line5;
         line6=DriverStationLCD::kUser_Line6;
         
-        display->PrintfLine(line1, "Test...");
+        
+        display->PrintfLine(line2, "More prefs");
+        display->UpdateLCD();        
+        Preferences::GetInstance()->PutInt("TestNumber", 1);
+        Preferences::GetInstance()->PutBoolean("TestBool", false);
+        display->PrintfLine(line3, "Put data");
         display->UpdateLCD();
-        //SmartDashboard::PutNumber("TestNumber", 1);
                 
     }
 
@@ -136,9 +142,9 @@ public:
             display->PrintfLine(line3, "Move: %d", move);
             display->PrintfLine(line4, "Rotate: %d", rotate);
             //*/
-            double test=1;//SmartDashboard::GetNumber("TestNumber");
+            int test=Preferences::GetInstance()->GetInt("TestNumber");
             
-            display->PrintfLine(line3, "Test: %f", test);
+            display->PrintfLine(line3, "Test: %d", test);
                         
             if(test==1)
             	move=1;
@@ -177,21 +183,22 @@ public:
         	if(driveStick.GetRawButton(BumperL)) // Hold Left bumper to go at 30% or 1/2 normal speed
         		speedMod=.5; // Is checked second so in case both bumpers are held, slower speed is used
         	
-        	x=driveStick.GetRawAxis(LeftX);
-        	y=-driveStick.GetRawAxis(LeftY); // The xbox controller uses down as positive for joysticks
+        	x=-driveStick.GetRawAxis(LeftX); 
+        	  // Inverting x because the robot was turning the wrong way
+        	
+        	y=-driveStick.GetRawAxis(LeftY); 
+        	  // The xbox controller uses down as positive for joysticks
         	
         	
         	// Using ArcadeDrive with two numbers (move and rotate) works better than passing
         	//		the xbox joystick object, and is easier to modify to apply a speed modifier.
             
-        	// TODO use move then rotate, not rotate then move
-        	// TODO fix one drive side being inverted
         	cDrive->ArcadeDrive(speedMod*y, speedMod*x);
 
-        	double test=1;//SmartDashboard::GetNumber("TestNumber");
+        	int test=Preferences::GetInstance()->GetInt("TestNumber");
         	
         	display->PrintfLine(line1, "Teleop");
-        	display->PrintfLine(line2, "TestNumber: %f", test);
+        	display->PrintfLine(line2, "TestNumber: %d", test);
             display->PrintfLine(line3, "Move: %f", speedMod*y);
             display->PrintfLine(line4, "Rotate: %f", speedMod*x);
                         
@@ -212,9 +219,16 @@ public:
      */
     void Test() {
     	while(IsTest()&&IsEnabled()){
-
-    		cDrive->ArcadeDrive(.6, 0); // Test if the robot drives in the right direction forward
-            
+    		
+    		Preferences *prefs=Preferences::GetInstance();
+    		int num=prefs->GetInt("TestNumber");
+    		bool boo=prefs->GetBoolean("TestBool");
+    		display->PrintfLine(line2, "Num = %d", num);
+    		display->PrintfLine(line3, "No boo :c");
+    		if(boo)
+    			display->PrintfLine(line3, "Boo! >:3 ");
+    		
+    		display->UpdateLCD();
     	}
 
     	
