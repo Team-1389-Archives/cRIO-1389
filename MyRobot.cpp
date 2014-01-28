@@ -131,7 +131,7 @@ public:
 
 class RobotDemo : public SimpleRobot {
 	
-    RobotDrive* cDrive; // Generic robotdrive object for 4 jags
+    //RobotDrive* cDrive; // Generic robotdrive object for 4 jags
     PIDRobotDrive* pDrive; // PID controlled drive object for 4 PIDControllers
     
     
@@ -221,19 +221,25 @@ public:
     	pidRR->Enable();
     	
     	pDrive = new PIDRobotDrive(pidLF, pidLR, pidRF, pidRR);
+        pDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,false);
+        pDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,false);
+        pDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
+        pDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,false);
+        pDrive->SetExpiration(0.1);
+        pDrive->SetMaxSpeed(5); // Temp max speed of 10 feet per second
     	
     	
         //jag2(2,CANJaguar::kVoltage);
         //jag3(3,CANJaguar::kVoltage);
         //jag4(4,CANJaguar::kVoltage);
     	
-    	
+    	/*
         cDrive = new RobotDrive(driveLF,driveLR,driveRF,driveRR);
         cDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,false);
         cDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,false);
         cDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
         cDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,false);
-        cDrive->SetExpiration(0.1);
+        cDrive->SetExpiration(0.1);//*/
         
         display=DriverStationLCD::GetInstance();
         line1=DriverStationLCD::kUser_Line1;
@@ -303,7 +309,7 @@ public:
             display->PrintfLine(line5, "Rotate: %f", rotate);
                         
             display->UpdateLCD();
-            cDrive->ArcadeDrive(move, rotate);
+            pDrive->ArcadeDrive(move, rotate);
             
         }
         
@@ -344,7 +350,7 @@ public:
         	// Using ArcadeDrive with two numbers (move and rotate) works better than passing
         	//		the xbox joystick object, and is easier to modify to apply a speed modifier.
             
-        	cDrive->ArcadeDrive(speedMod*y, speedMod*x);
+        	pDrive->ArcadeDrive(speedMod*y, speedMod*x);
 
         	int test=Preferences::GetInstance()->GetInt("TestNumber");
         	
