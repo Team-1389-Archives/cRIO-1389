@@ -38,10 +38,10 @@
 
 // Encoder Channel numbers
 // TODO set these
-#define EncoderLA			(-1) //  Left encoder channel A number
-#define EncoderLB			(-1) // Right encoder channel B number
-#define EncoderRA			(-1) //  Left encoder channel A number
-#define EncoderRB			(-1) // Right encoder channel B number
+#define EncoderLA			(1) //  Left encoder channel A number
+#define EncoderLB			(2) // Right encoder channel B number
+#define EncoderRA			(3) //  Left encoder channel A number
+#define EncoderRB			(4) // Right encoder channel B number
 
 
 // Robot physical data
@@ -55,7 +55,7 @@
 #define PID_D				(0.000)
 
 // Encoder data
-#define EncoderPulses		(4) // Number of pulses per rotation on the encoders
+#define EncoderPulses		(360) // Number of pulses per rotation on the encoders
 
 
 class MyRobotDrive : public RobotDrive {
@@ -132,8 +132,12 @@ public:
 class RobotDemo : public SimpleRobot {
 	
     //RobotDrive* cDrive; // Generic robotdrive object for 4 jags
-    PIDRobotDrive* pDrive; // PID controlled drive object for 4 PIDControllers
     
+	
+	// TODO PIDRobotDrive* pDrive; // PID controlled drive object for 4 PIDControllers
+    
+	
+	DigitalModule *sideCar;
     
     Joystick driveStick, funcStick; // The two XBOX controllers
     
@@ -150,9 +154,10 @@ class RobotDemo : public SimpleRobot {
 
     Victor *driveLF, *driveLR, *driveRF, *driveRR;
     
+      
     Encoder *encoderL, *encoderR;
-    
-    PIDController *pidLF, *pidLR, *pidRF, *pidRR;
+     /*
+    PIDController *pidLF, *pidLR, *pidRF, *pidRR; */
     
     // These save time typing out DriverStationLCD repeatedly for displays
     DriverStationLCD *display;
@@ -196,37 +201,50 @@ public:
     	driveRF=new Victor(DriveMotorRF);
     	driveRR=new Victor(DriveMotorRR);
     	
-    	// Encoder port macros are -1 until we learn actual ports
+    	
     	encoderL=new Encoder(EncoderLA, EncoderLB, false); // The false is on reversing directions
     	encoderR=new Encoder(EncoderRA, EncoderRB, false);
     	
     	// Set encoders to be controlled by rate, not distance
     	// Perhaps distance is preferable?
+    	
     	encoderL->SetPIDSourceParameter(PIDSource::kRate);
-    	encoderR->SetPIDSourceParameter(PIDSource::kRate);
+    	encoderR->SetPIDSourceParameter(PIDSource::kRate); 
     	
     	
     	// Sets the distance of one pulse so that a full rotation of pulses is the distance driven
     	encoderL->SetDistancePerPulse( WheelCircumference / EncoderPulses );
-    	encoderR->SetDistancePerPulse( WheelCircumference / EncoderPulses );
+    	encoderR->SetDistancePerPulse( WheelCircumference / EncoderPulses ); 
+    	
+    	encoderL->SetMinRate(0.1);
+    	encoderR->SetMinRate(0.1);
+    	
+    	encoderL->SetSamplesToAverage(4);
+    	encoderR->SetSamplesToAverage(6);
+    	
+    	encoderL->Start();
+    	encoderR->Start();
 
+    	/* TODO
     	pidLF=new PIDController(PID_P, PID_I, PID_D, encoderL, driveLF);
     	pidLR=new PIDController(PID_P, PID_I, PID_D, encoderL, driveLR);
     	pidRF=new PIDController(PID_P, PID_I, PID_D, encoderR, driveRF);
-    	pidRR=new PIDController(PID_P, PID_I, PID_D, encoderR, driveRR);
+    	pidRR=new PIDController(PID_P, PID_I, PID_D, encoderR, driveRR); */
 
+    	/* TODO remove when testing is done
     	pidLF->Enable();
     	pidLR->Enable();
     	pidRF->Enable();
-    	pidRR->Enable();
+    	pidRR->Enable();//*/
     	
+    	/* TODO 
     	pDrive = new PIDRobotDrive(pidLF, pidLR, pidRF, pidRR);
         pDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,false);
         pDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,false);
         pDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
         pDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,false);
         pDrive->SetExpiration(0.1);
-        pDrive->SetMaxSpeed(5); // Temp max speed of 10 feet per second
+        pDrive->SetMaxSpeed(5); // Temp max speed of 10 feet per second */
     	
     	
         //jag2(2,CANJaguar::kVoltage);
@@ -249,8 +267,9 @@ public:
         line5=DriverStationLCD::kUser_Line5;
         line6=DriverStationLCD::kUser_Line6;
         
+        sideCar=DigitalModule::GetInstance(2);
         
-        display->PrintfLine(line2, "More prefs");
+        display->PrintfLine(line2, "Encoders pls");
         display->UpdateLCD();        
         Preferences::GetInstance()->PutInt("TestNumber", 1);
         Preferences::GetInstance()->PutBoolean("TestBool", false);
@@ -309,7 +328,7 @@ public:
             display->PrintfLine(line5, "Rotate: %f", rotate);
                         
             display->UpdateLCD();
-            pDrive->ArcadeDrive(move, rotate);
+            // TODO pDrive->ArcadeDrive(move, rotate);
             
         }
         
@@ -350,7 +369,7 @@ public:
         	// Using ArcadeDrive with two numbers (move and rotate) works better than passing
         	//		the xbox joystick object, and is easier to modify to apply a speed modifier.
             
-        	pDrive->ArcadeDrive(speedMod*y, speedMod*x);
+        	// TODO pDrive->ArcadeDrive(speedMod*y, speedMod*x);
 
         	int test=Preferences::GetInstance()->GetInt("TestNumber");
         	
@@ -377,15 +396,17 @@ public:
     void Test() {
     	while(IsTest()&&IsEnabled()){
     		
-    		Preferences *prefs=Preferences::GetInstance();
-    		int num=prefs->GetInt("TestNumber");
-    		bool boo=prefs->GetBoolean("TestBool");
-    		display->PrintfLine(line2, "Num = %d", num);
-    		display->PrintfLine(line3, "No boo :c");
-    		if(boo)
-    			display->PrintfLine(line3, "Boo! >:3 ");
+    		float temp = encoderL->GetRate();
+    		float tomp = encoderR->GetRate();
+    		
+    		display->PrintfLine(line2, "Testgo");
+    		//if(temp!=0)
+    			display->PrintfLine(line3, "Rate: %f", temp);
+    		//if(tomp!=0)
+    			display->PrintfLine(line4, "Rate2: %f", tomp);
     		
     		display->UpdateLCD();
+    		
     	}
 
 
