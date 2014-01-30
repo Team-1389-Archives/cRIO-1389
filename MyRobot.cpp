@@ -3,10 +3,6 @@
 #include <Math.h>
 //#include "SpeedController.h"
 
-#define Pi					(3.1415926535898) // Pi to 14 places
-#define Tao					(2 * Pi) // At preference of user
-#define Octopi				(8 * Pi) // "                   "
-
 // XBOX Controller button and axis numbers
 #define ControllerA			(1) // Port for primary controller, drive controller
 #define ControllerB			(2) // Port for secondary controller, functionality
@@ -22,40 +18,6 @@
 #define LeftX				(1) // XBox Controller  Left X Axis number
 #define RightY				(5) // XBox Controller Right Y Axis number
 #define RightX				(4) // XBox Controller Right X Axis number
-
-// CAN Jaguar Numbers
-#define CanNumLF			(1) //  Left Front motor port
-#define CanNumLR			(2) //  Left  Rear motor port
-#define CanNumRF			(3) // Right Front motor port
-#define CanNumRR			(4) // Right  Rear motor port
-
-// Drive Motor Ports
-#define DriveMotorLF		(1) //  Left Front motor port
-#define DriveMotorLR		(2) //  Left  Rear motor port
-#define DriveMotorRF		(3) // Right Front motor port
-#define DriveMotorRR		(4) // Right  Rear motor port
-
-
-// Encoder Channel numbers
-// TODO set these
-#define EncoderLA			(-1) //  Left encoder channel A number
-#define EncoderLB			(-1) // Right encoder channel B number
-#define EncoderRA			(-1) //  Left encoder channel A number
-#define EncoderRB			(-1) // Right encoder channel B number
-
-
-// Robot physical data
-#define WheelCircumference	(Pi / 2) // Circumference in feet (6 in diameter)
-
-
-// PID Starting values
-// TODO test for new ones, these ones borrowed from 2012 & 2013
-#define PID_P				(1.505)
-#define PID_I				(0.003)
-#define PID_D				(0.000)
-
-// Encoder data
-#define EncoderPulses		(4) // Number of pulses per rotation on the encoders
 
 
 class MyRobotDrive : public RobotDrive {
@@ -88,71 +50,25 @@ public:
     }
 };
 
-class PIDRobotDrive : public RobotDrive {
-    PIDController* pid1;
-    PIDController* pid2;
-    PIDController* pid3;
-    PIDController* pid4;
-    
-    float m_maxSpeed;
-
-public: 
-    
-	// RobotDrive can already accept four jaguars as its motors, this custom class seems unnecessary
-
-    /* (front) left, (rear) left, (front) right, (rear) right */
-    
-    PIDRobotDrive(PIDController* j1,PIDController* j2,PIDController* j3,PIDController* j4):
-    	
-        RobotDrive((SpeedController *)NULL,(SpeedController *)NULL) {
-        pid1 = j1;
-        pid2 = j2;
-        pid3 = j3;
-        pid4 = j4;
-        m_maxSpeed=15; // Default max speed = 15 feet per second
-    }
-
-    void SetLeftRightMotorOutputs(float leftOutput, float rightOutput) {
-    	// leftOutput and rightOutput are -1 to 1, but we want speed in feet per second
-    	pid1->SetSetpoint(leftOutput*m_maxSpeed); 
-    	pid2->SetSetpoint(leftOutput*m_maxSpeed); 
-    	pid3->SetSetpoint(rightOutput*m_maxSpeed);
-    	pid4->SetSetpoint(rightOutput*m_maxSpeed);
-    }
-    
-    void SetMaxSpeed(float maxSpeed){ // Set max speed
-    	m_maxSpeed=maxSpeed; 
-    }
-    
-    float GetMaxSpeed(){
-    	return m_maxSpeed;
-    }
-};
-
 class RobotDemo : public SimpleRobot {
 	
+<<<<<<< HEAD
     //RobotDrive* cDrive; // Generic robotdrive object for 4 jags
     PIDRobotDrive* pDrive; // PID controlled drive object for 4 PIDControllers
+=======
+    RobotDrive* cDrive; // Generic robotdrive object for 4 jags
+>>>>>>> parent of 18423cb... Added PIDRobotDrive class and Encoders
     
     
     Joystick driveStick, funcStick; // The two XBOX controllers
     
     
-    // The four drive jaguars. Left front, left rear, right front, right rear.
-    /*
     Jaguar jag1;
     Jaguar jag2;
     Jaguar jag3;
-    Jaguar jag4;//*/
-    
-    
+    Jaguar jag4;
     ImageAnalysisClient iaClient;
-
-    Victor *driveLF, *driveLR, *driveRF, *driveRR;
     
-    Encoder *encoderL, *encoderR;
-    
-    PIDController *pidLF, *pidLR, *pidRF, *pidRR;
     
     // These save time typing out DriverStationLCD repeatedly for displays
     DriverStationLCD *display;
@@ -162,8 +78,13 @@ public:
     RobotDemo(): // TODO replace port numbers with define macros
         driveStick(ControllerA),
         funcStick(ControllerB),
+        jag1(1),
+        jag2(2),
+        jag3(3),
+        jag4(4),
         iaClient(IMAGE_ANALYSIS_SERVER_IP, IMAGE_ANALYSIS_SERVER_PORT){
 
+<<<<<<< HEAD
     	/*   // CANJaguar setup
     	driveLF=new CANJaguar(CanNumLF, CANJaguar::kSpeed);
     	driveLR=new CANJaguar(CanNumLR, CANJaguar::kSpeed);
@@ -235,6 +156,12 @@ public:
     	
     	/*
         cDrive = new RobotDrive(driveLF,driveLR,driveRF,driveRR);
+=======
+        //jag2(2,CANJaguar::kVoltage);
+        //jag3(3,CANJaguar::kVoltage);
+        //jag4(4,CANJaguar::kVoltage);
+        cDrive = new RobotDrive(&jag1,&jag2,&jag3,&jag4);
+>>>>>>> parent of 18423cb... Added PIDRobotDrive class and Encoders
         cDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,false);
         cDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,false);
         cDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
@@ -267,9 +194,6 @@ public:
 #define CENTER_THRESHOLD    (20)
 #define RADIUS_TARGET       (60)
 #define RADIUS_THRESHOLD    (20)
-    	
-    	// TODO set pidrobotdrive max speed to a useful value (20 feet per second?)
-    	
         while(IsAutonomous()&&IsEnabled()) {
             ImageData data;
             iaClient.copyImageData(&data);
@@ -313,10 +237,10 @@ public:
             
         }
         
-        driveLF->Set(0);
-        driveLR->Set(0);
-        driveRF->Set(0);
-        driveRR->Set(0);
+        jag1.Set(0);
+        jag2.Set(0);
+        jag3.Set(0);
+        jag4.Set(0);
         
     }
 
@@ -326,8 +250,6 @@ public:
      */
     void OperatorControl() {
         //    myRobot.SetSafetyEnabled(true);
-    	
-    	// TODO set pidrobotdrive max speed to what we want to be driving max speed
     	
     	// TODO consider floats vs doubles
     	double x, y;
@@ -364,10 +286,10 @@ public:
             Wait(0.005);                // wait for a motor update time
         }
 
-        driveLF->Set(0);
-        driveLR->Set(0);
-        driveRF->Set(0);
-        driveRR->Set(0);
+        jag1.Set(0);
+        jag2.Set(0);
+        jag3.Set(0);
+        jag4.Set(0);
         
     }
 
@@ -388,11 +310,11 @@ public:
     		display->UpdateLCD();
     	}
 
-
-        driveLF->Set(0);
-        driveLR->Set(0);
-        driveRF->Set(0);
-        driveRR->Set(0);
+    	
+        jag1.Set(0);
+        jag2.Set(0);
+        jag3.Set(0);
+        jag4.Set(0);
         
     }
 };
