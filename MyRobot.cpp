@@ -38,10 +38,10 @@
 
 // Encoder Channel numbers
 // TODO set these
-#define EncoderLA			(-1) //  Left encoder channel A number
-#define EncoderLB			(-1) // Right encoder channel B number
-#define EncoderRA			(-1) //  Left encoder channel A number
-#define EncoderRB			(-1) // Right encoder channel B number
+#define EncoderLA			(1) //  Left encoder channel A number
+#define EncoderLB			(2) // Right encoder channel B number
+#define EncoderRA			(3) //  Left encoder channel A number
+#define EncoderRB			(4) // Right encoder channel B number
 
 
 // Robot physical data
@@ -55,7 +55,7 @@
 #define PID_D				(0.000)
 
 // Encoder data
-#define EncoderPulses		(4) // Number of pulses per rotation on the encoders
+#define EncoderPulses		(360) // Number of pulses per rotation on the encoders
 
 
 class MyRobotDrive : public RobotDrive {
@@ -131,8 +131,8 @@ public:
 
 class RobotDemo : public SimpleRobot {
 	
-    //RobotDrive* cDrive; // Generic robotdrive object for 4 jags
-    PIDRobotDrive* pDrive; // PID controlled drive object for 4 PIDControllers
+    RobotDrive* cDrive; // Generic robotdrive object for 4 jags
+    // TODO PIDRobotDrive* pDrive; // PID controlled drive object for 4 PIDControllers
     
     
     Joystick driveStick, funcStick; // The two XBOX controllers
@@ -152,7 +152,7 @@ class RobotDemo : public SimpleRobot {
     
     Encoder *encoderL, *encoderR;
     
-    PIDController *pidLF, *pidLR, *pidRF, *pidRR;
+    // TODO PIDController *pidLF, *pidLR, *pidRF, *pidRR;
     
     // These save time typing out DriverStationLCD repeatedly for displays
     DriverStationLCD *display;
@@ -205,11 +205,16 @@ public:
     	encoderL->SetPIDSourceParameter(PIDSource::kRate);
     	encoderR->SetPIDSourceParameter(PIDSource::kRate);
     	
-    	
     	// Sets the distance of one pulse so that a full rotation of pulses is the distance driven
     	encoderL->SetDistancePerPulse( WheelCircumference / EncoderPulses );
     	encoderR->SetDistancePerPulse( WheelCircumference / EncoderPulses );
-
+    	
+    	encoderL->Start();
+    	encoderR->Start();
+    	
+    	
+    	
+    	/* TODO
     	pidLF=new PIDController(PID_P, PID_I, PID_D, encoderL, driveLF);
     	pidLR=new PIDController(PID_P, PID_I, PID_D, encoderL, driveLR);
     	pidRF=new PIDController(PID_P, PID_I, PID_D, encoderR, driveRF);
@@ -218,16 +223,16 @@ public:
     	pidLF->Enable();
     	pidLR->Enable();
     	pidRF->Enable();
-    	pidRR->Enable();
+    	pidRR->Enable(); */
     	
-    	pDrive = new PIDRobotDrive(pidLF, pidLR, pidRF, pidRR);
-        pDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,false);
-        pDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,false);
-        pDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
-        pDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,false);
-        pDrive->SetExpiration(0.1);
-        pDrive->SetMaxSpeed(5); // Temp max speed of 10 feet per second
-    	
+    	cDrive = new RobotDrive(driveLF, driveLR, driveRF, driveRR);
+        cDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,false);
+        cDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,false);
+        cDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
+        cDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,false);
+        cDrive->SetExpiration(0.1);
+        // TODO cDrive->SetMaxSpeed(5); // Temp max speed of 10 feet per second
+ 
     	
         //jag2(2,CANJaguar::kVoltage);
         //jag3(3,CANJaguar::kVoltage);
@@ -250,11 +255,11 @@ public:
         line6=DriverStationLCD::kUser_Line6;
         
         
-        display->PrintfLine(line2, "More prefs");
+        display->PrintfLine(line2, "Lock Ness Driving");
         display->UpdateLCD();        
         Preferences::GetInstance()->PutInt("TestNumber", 1);
         Preferences::GetInstance()->PutBoolean("TestBool", false);
-        display->PrintfLine(line3, "Put data");
+        display->PrintfLine(line3, "Doop");
         display->UpdateLCD();
                 
     }
@@ -309,7 +314,7 @@ public:
             display->PrintfLine(line5, "Rotate: %f", rotate);
                         
             display->UpdateLCD();
-            pDrive->ArcadeDrive(move, rotate);
+            cDrive->ArcadeDrive(move, rotate);
             
         }
         
@@ -350,7 +355,11 @@ public:
         	// Using ArcadeDrive with two numbers (move and rotate) works better than passing
         	//		the xbox joystick object, and is easier to modify to apply a speed modifier.
             
-        	pDrive->ArcadeDrive(speedMod*y, speedMod*x);
+        	bool lock=driveStick.GetRawButton(ButtonA);
+        	if(lock)
+        		x=0;
+        	
+        	cDrive->ArcadeDrive(speedMod*y, speedMod*x);
 
         	int test=Preferences::GetInstance()->GetInt("TestNumber");
         	
@@ -358,6 +367,12 @@ public:
         	display->PrintfLine(line2, "TestNumber: %d", test);
             display->PrintfLine(line3, "Move: %f", speedMod*y);
             display->PrintfLine(line4, "Rotate: %f", speedMod*x);
+    		
+    		float left = encoderL->GetDistance();
+    		float righ = encoderR->GetDistance();
+    		
+    		display->PrintfLine(line5, "Left: %f", left);
+    		display->PrintfLine(line6, "Riet: %f", righ);
                         
             display->UpdateLCD();
             
@@ -377,13 +392,11 @@ public:
     void Test() {
     	while(IsTest()&&IsEnabled()){
     		
-    		Preferences *prefs=Preferences::GetInstance();
-    		int num=prefs->GetInt("TestNumber");
-    		bool boo=prefs->GetBoolean("TestBool");
-    		display->PrintfLine(line2, "Num = %d", num);
-    		display->PrintfLine(line3, "No boo :c");
-    		if(boo)
-    			display->PrintfLine(line3, "Boo! >:3 ");
+    		float left = encoderL->GetDistance();
+    		float righ = encoderR->GetDistance();
+    		
+    		display->PrintfLine(line3, "Lef: %f", left);
+    		display->PrintfLine(line4, "Rie: %f", righ);
     		
     		display->UpdateLCD();
     	}
