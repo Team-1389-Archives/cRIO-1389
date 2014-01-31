@@ -52,6 +52,7 @@
 #define PID_P				(1.005)
 #define PID_I				(0.005)
 #define PID_D				(0.000)
+#define PID_F				(1.000) 
 
 #define SpeedThreshold		(0.05) // Driving speed minimum
 
@@ -93,6 +94,33 @@ public:
         jag3->Set(rightOutput);
         jag4->Set(rightOutput);
     }
+};
+
+class PIDVictor : public Victor {
+	float maxSpeed;
+	
+public:
+	
+	PIDVictor(uint32_t channel) : Victor(channel){
+		
+		maxSpeed=0;
+		
+	}
+	
+	PIDVictor(uint32_t channel, float maxspeed) : Victor(channel){
+		
+		maxSpeed=maxspeed;
+		
+	}
+	
+	void setMaxSpeed(float maxspeed){
+		maxSpeed=maxspeed;
+	}
+	
+	void PIDWrite(float output){
+		Set(output/maxSpeed);
+	}
+	
 };
 
 class PIDRobotDrive : public RobotDrive {
@@ -160,7 +188,7 @@ class RobotDemo : public SimpleRobot {
     // Commenting out image client to test if that fixes pid
     //ImageAnalysisClient iaClient;
 
-    Victor *driveLF, *driveLR, *driveRF, *driveRR;
+    PIDVictor *driveLF, *driveLR, *driveRF, *driveRR;
     
     Encoder *encoderL, *encoderR;
     
@@ -203,10 +231,10 @@ public:
     	driveRR->EnableControl(); 
     	//*/
 
-    	driveLF=new Victor(DriveMotorLF);
-    	driveLR=new Victor(DriveMotorLR);
-    	driveRF=new Victor(DriveMotorRF);
-    	driveRR=new Victor(DriveMotorRR);
+    	driveLF=new PIDVictor(DriveMotorLF, 13); // 13 feet per second approximate max speed
+    	driveLR=new PIDVictor(DriveMotorLR, 13);
+    	driveRF=new PIDVictor(DriveMotorRF, 13);
+    	driveRR=new PIDVictor(DriveMotorRR, 13);
     	
     	// Encoder port macros are -1 until we learn actual ports
     	encoderL=new Encoder(EncoderLA, EncoderLB, false, Encoder::k4X); // The false is on reversing directions
@@ -226,11 +254,10 @@ public:
     	encoderR->Start();
     	
     	
-    
-    	pidLF=new PIDController(PID_P, PID_I, PID_D, encoderL, driveLF);
-    	pidLR=new PIDController(PID_P, PID_I, PID_D, encoderL, driveLR);
-    	pidRF=new PIDController(PID_P, PID_I, PID_D, encoderR, driveRF);
-    	pidRR=new PIDController(PID_P, PID_I, PID_D, encoderR, driveRR);
+    	pidLF=new PIDController(PID_P, PID_I, PID_D, PID_F, encoderL, driveLF);
+    	pidLR=new PIDController(PID_P, PID_I, PID_D, PID_F, encoderL, driveLR);
+    	pidRF=new PIDController(PID_P, PID_I, PID_D, PID_F, encoderR, driveRF);
+    	pidRR=new PIDController(PID_P, PID_I, PID_D, PID_F, encoderR, driveRR);
 
     	pidLF->SetContinuous(false);
     	pidLR->SetContinuous(false);
@@ -272,11 +299,11 @@ public:
         line6=DriverStationLCD::kUser_Line6;
         
         
-        display->PrintfLine(line2, "Hmmore");
+        display->PrintfLine(line2, "PID fix?");
         display->UpdateLCD();        
         Preferences::GetInstance()->PutInt("TestNumber", 1);
         Preferences::GetInstance()->PutBoolean("TestBool", false);
-        display->PrintfLine(line3, "Skidoop");
+        display->PrintfLine(line3, "I hoap");
         display->UpdateLCD();
                 
     }
@@ -364,6 +391,8 @@ public:
     	pref->PutDouble("PidB", 0);
     	pref->PutDouble("PidC", 0);
     	pref->PutDouble("PidD", 0);
+    	pref->PutDouble("PidL", 0);
+    	pref->PutDouble("PidR", 0);
     	
         while (IsOperatorControl()&&IsEnabled()) {
         	speedMod=.65;
@@ -401,6 +430,8 @@ public:
         	pref->PutDouble("PidB", pidLR->GetSetpoint());
         	pref->PutDouble("PidC", pidRF->GetSetpoint());
         	pref->PutDouble("PidD", pidRR->GetSetpoint());
+        	pref->PutDouble("PidL", encoderL->PIDGet());
+        	pref->PutDouble("PidR", encoderR->PIDGet());
         	
         	display->PrintfLine(line1, "Teleop");
         	//display->PrintfLine(line2, "TestNumber: %d", test);
