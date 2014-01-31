@@ -37,7 +37,6 @@
 
 
 // Encoder Channel numbers
-// TODO set these
 #define EncoderLA			(1) //  Left encoder channel A number
 #define EncoderLB			(2) // Right encoder channel B number
 #define EncoderRA			(3) //  Left encoder channel A number
@@ -57,7 +56,7 @@
 // Encoder data
 #define EncoderPulses		(360) // Number of pulses per rotation on the encoders
 
-
+// Unused and seemingly unnecessary custom RobotDrive class
 class MyRobotDrive : public RobotDrive {
     //CANJaguar* jag1, jag2, jag3, jag4;
     Jaguar* jag1;
@@ -88,83 +87,31 @@ public:
     }
 };
 
-class PIDRobotDrive : public RobotDrive {
-    PIDController* pid1;
-    PIDController* pid2;
-    PIDController* pid3;
-    PIDController* pid4;
-    
-    float m_maxSpeed;
-
-public: 
-    
-	// RobotDrive can already accept four jaguars as its motors, this custom class seems unnecessary
-
-    /* (front) left, (rear) left, (front) right, (rear) right */
-    
-    PIDRobotDrive(PIDController* j1,PIDController* j2,PIDController* j3,PIDController* j4):
-    	
-        RobotDrive((SpeedController *)NULL,(SpeedController *)NULL) {
-        pid1 = j1;
-        pid2 = j2;
-        pid3 = j3;
-        pid4 = j4;
-        m_maxSpeed=15; // Default max speed = 15 feet per second
-    }
-
-    void SetLeftRightMotorOutputs(float leftOutput, float rightOutput) {
-    	// leftOutput and rightOutput are -1 to 1, but we want speed in feet per second
-    	pid1->SetSetpoint(leftOutput*m_maxSpeed); 
-    	pid2->SetSetpoint(leftOutput*m_maxSpeed); 
-    	pid3->SetSetpoint(rightOutput*m_maxSpeed);
-    	pid4->SetSetpoint(rightOutput*m_maxSpeed);
-    }
-    
-    void SetMaxSpeed(float maxSpeed){ // Set max speed
-    	m_maxSpeed=maxSpeed; 
-    }
-    
-    float GetMaxSpeed(){
-    	return m_maxSpeed;
-    }
-};
 
 class RobotDemo : public SimpleRobot {
 	
     RobotDrive* cDrive; // Generic robotdrive object for 4 jags
-    // TODO PIDRobotDrive* pDrive; // PID controlled drive object for 4 PIDControllers
     
     
     Joystick driveStick, funcStick; // The two XBOX controllers
     
     
-    // The four drive jaguars. Left front, left rear, right front, right rear.
-    /*
-    Jaguar jag1;
-    Jaguar jag2;
-    Jaguar jag3;
-    Jaguar jag4;//*/
-    
     
     ImageAnalysisClient iaClient;
 
-    Victor *driveLF, *driveLR, *driveRF, *driveRR;
-    
-    Encoder *encoderL, *encoderR;
-    
-    // TODO PIDController *pidLF, *pidLR, *pidRF, *pidRR;
+    CANJaguar *driveLF, *driveLR, *driveRF, *driveRR;
     
     // These save time typing out DriverStationLCD repeatedly for displays
     DriverStationLCD *display;
     DriverStationLCD::Line line1, line2, line3, line4, line5, line6;
     
 public:
-    RobotDemo(): // TODO replace port numbers with define macros
+    RobotDemo():
         driveStick(ControllerA),
         funcStick(ControllerB),
         iaClient(IMAGE_ANALYSIS_SERVER_IP, IMAGE_ANALYSIS_SERVER_PORT){
 
-    	/*   // CANJaguar setup
+    	// CANJaguar setup
     	driveLF=new CANJaguar(CanNumLF, CANJaguar::kSpeed);
     	driveLR=new CANJaguar(CanNumLR, CANJaguar::kSpeed);
     	driveRF=new CANJaguar(CanNumRF, CANJaguar::kSpeed);
@@ -189,63 +136,16 @@ public:
     	driveLR->EnableControl();
     	driveRF->EnableControl();
     	driveRR->EnableControl(); 
-    	//*/
-
-    	driveLF=new Victor(DriveMotorLF);
-    	driveLR=new Victor(DriveMotorLR);
-    	driveRF=new Victor(DriveMotorRF);
-    	driveRR=new Victor(DriveMotorRR);
     	
-    	// Encoder port macros are -1 until we learn actual ports
-    	encoderL=new Encoder(EncoderLA, EncoderLB, false); // The false is on reversing directions
-    	encoderR=new Encoder(EncoderRA, EncoderRB, false);
-    	
-    	// Set encoders to be controlled by rate, not distance
-    	// Perhaps distance is preferable?
-    	encoderL->SetPIDSourceParameter(PIDSource::kRate);
-    	encoderR->SetPIDSourceParameter(PIDSource::kRate);
-    	
-    	// Sets the distance of one pulse so that a full rotation of pulses is the distance driven
-    	encoderL->SetDistancePerPulse( WheelCircumference / EncoderPulses );
-    	encoderR->SetDistancePerPulse( WheelCircumference / EncoderPulses );
-    	
-    	encoderL->Start();
-    	encoderR->Start();
-    	
-    	
-    	
-    	/* TODO
-    	pidLF=new PIDController(PID_P, PID_I, PID_D, encoderL, driveLF);
-    	pidLR=new PIDController(PID_P, PID_I, PID_D, encoderL, driveLR);
-    	pidRF=new PIDController(PID_P, PID_I, PID_D, encoderR, driveRF);
-    	pidRR=new PIDController(PID_P, PID_I, PID_D, encoderR, driveRR);
-
-    	pidLF->Enable();
-    	pidLR->Enable();
-    	pidRF->Enable();
-    	pidRR->Enable(); */
-    	
+    	// Init Robotdrive
     	cDrive = new RobotDrive(driveLF, driveLR, driveRF, driveRR);
         cDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,false);
         cDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,false);
         cDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
         cDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,false);
         cDrive->SetExpiration(0.1);
-        // TODO cDrive->SetMaxSpeed(5); // Temp max speed of 10 feet per second
  
-    	
-        //jag2(2,CANJaguar::kVoltage);
-        //jag3(3,CANJaguar::kVoltage);
-        //jag4(4,CANJaguar::kVoltage);
-    	
-    	/*
-        cDrive = new RobotDrive(driveLF,driveLR,driveRF,driveRR);
-        cDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,false);
-        cDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,false);
-        cDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
-        cDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,false);
-        cDrive->SetExpiration(0.1);//*/
-        
+        // Driverstation Display shortcuts
         display=DriverStationLCD::GetInstance();
         line1=DriverStationLCD::kUser_Line1;
         line2=DriverStationLCD::kUser_Line2;
@@ -254,7 +154,7 @@ public:
         line5=DriverStationLCD::kUser_Line5;
         line6=DriverStationLCD::kUser_Line6;
         
-        
+        // Print version info
         display->PrintfLine(line2, "Lock Ness Driving");
         display->UpdateLCD();        
         Preferences::GetInstance()->PutInt("TestNumber", 1);
@@ -272,8 +172,6 @@ public:
 #define CENTER_THRESHOLD    (20)
 #define RADIUS_TARGET       (60)
 #define RADIUS_THRESHOLD    (20)
-    	
-    	// TODO set pidrobotdrive max speed to a useful value (20 feet per second?)
     	
         while(IsAutonomous()&&IsEnabled()) {
             ImageData data;
@@ -331,8 +229,7 @@ public:
      */
     void OperatorControl() {
         //    myRobot.SetSafetyEnabled(true);
-    	
-    	// TODO set pidrobotdrive max speed to what we want to be driving max speed
+    			// Is this important?
     	
     	// TODO consider floats vs doubles
     	double x, y;
@@ -368,11 +265,6 @@ public:
             display->PrintfLine(line3, "Move: %f", speedMod*y);
             display->PrintfLine(line4, "Rotate: %f", speedMod*x);
     		
-    		float left = encoderL->GetDistance();
-    		float righ = encoderR->GetDistance();
-    		
-    		display->PrintfLine(line5, "Left: %f", left);
-    		display->PrintfLine(line6, "Riet: %f", righ);
                         
             display->UpdateLCD();
             
@@ -392,11 +284,7 @@ public:
     void Test() {
     	while(IsTest()&&IsEnabled()){
     		
-    		float left = encoderL->GetDistance();
-    		float righ = encoderR->GetDistance();
-    		
-    		display->PrintfLine(line3, "Lef: %f", left);
-    		display->PrintfLine(line4, "Rie: %f", righ);
+    		display->PrintfLine(line2, "No test set.");
     		
     		display->UpdateLCD();
     	}
