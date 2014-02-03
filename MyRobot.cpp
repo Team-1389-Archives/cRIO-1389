@@ -24,10 +24,11 @@
 #define RightX				(4) // XBox Controller Right X Axis number
 
 // CAN Jaguar Numbers
-#define CanNumLF			(1) //  Left Front motor port
-#define CanNumLR			(2) //  Left  Rear motor port
-#define CanNumRF			(3) // Right Front motor port
-#define CanNumRR			(4) // Right  Rear motor port
+#define CanNumLF			(1) //  Left Front motor CAN number
+#define CanNumLR			(2) //  Left  Rear motor CAN number
+#define CanNumRF			(3) // Right Front motor CAN number
+#define CanNumRR			(4) // Right  Rear motor CAN number
+#define CanNumKick			(5) // Kicker motor CAN number
 
 // Drive Motor Ports
 #define DriveMotorLF		(1) //  Left Front motor port
@@ -36,6 +37,7 @@
 #define DriveMotorRR		(4) // Right  Rear motor port
 
 
+// TODO remove Encoder macros when we verify we can just use CANJaguar motor control
 // Encoder Channel numbers
 #define EncoderLA			(1) //  Left encoder channel A number
 #define EncoderLB			(2) // Right encoder channel B number
@@ -54,15 +56,17 @@
 #define PID_D				(0.000)
 
 // Encoder data
-#define EncoderPulses		(360) // Number of pulses per rotation on the encoders
+#define EncoderPulses		(360) // Number of pulses per rotation on the drive encoders
+#define KickerPulses		(1800) // Number of pulses per rotation on the kicker encoder
 
-// Unused and seemingly unnecessary custom RobotDrive class
-class MyRobotDrive : public RobotDrive {
+class EncodedRobotDrive : public RobotDrive {
     //CANJaguar* jag1, jag2, jag3, jag4;
-    Jaguar* jag1;
-    Jaguar* jag2;
-    Jaguar* jag3;
-    Jaguar* jag4;
+    CANJaguar* jag1;
+    CANJaguar* jag2;
+    CANJaguar* jag3;
+    CANJaguar* jag4;
+    
+    float speed;
 
 public: 
     
@@ -70,27 +74,34 @@ public:
 
     /* (front) left, (rear) left, (front) right, (rear) right */
     
-    MyRobotDrive(Jaguar* j1,Jaguar* j2,Jaguar* j3,Jaguar* j4):
+    EncodedRobotDrive(CANJaguar* j1,CANJaguar* j2,CANJaguar* j3,CANJaguar* j4):
     	
         RobotDrive((SpeedController *)NULL,(SpeedController *)NULL) {
         jag1 = j1;
         jag2 = j2;
         jag3 = j3;
         jag4 = j4;
+        speed=10;
+    }
+    
+    void SetMaxSpeed(float maxSpeed){
+    	speed=maxSpeed;
     }
 
     void SetLeftRightMotorOutputs(float leftOutput, float rightOutput) {
-        jag1->Set(leftOutput);
-        jag2->Set(leftOutput);
-        jag3->Set(rightOutput);
+        jag1->Set(speed*leftOutput);
+        jag2->Set(speed*leftOutput);
+        jag3->Set(rightOutput); // TODO repeat this for right side
         jag4->Set(rightOutput);
+        
+        DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line5, "Target: %f", speed*leftOutput);
     }
 };
 
 
 class RobotDemo : public SimpleRobot {
 	
-    RobotDrive* cDrive; // Generic robotdrive object for 4 jags
+    EncodedRobotDrive* cDrive; // Generic robotdrive object for 4 jags
     
     
     Joystick driveStick, funcStick; // The two XBOX controllers
@@ -100,6 +111,7 @@ class RobotDemo : public SimpleRobot {
     ImageAnalysisClient iaClient;
 
     CANJaguar *driveLF, *driveLR, *driveRF, *driveRR;
+    CANJaguar *kicker;
     
     // These save time typing out DriverStationLCD repeatedly for displays
     DriverStationLCD *display;
@@ -114,31 +126,37 @@ public:
     	// CANJaguar setup
     	driveLF=new CANJaguar(CanNumLF, CANJaguar::kSpeed);
     	driveLR=new CANJaguar(CanNumLR, CANJaguar::kSpeed);
-    	driveRF=new CANJaguar(CanNumRF, CANJaguar::kSpeed);
-    	driveRR=new CANJaguar(CanNumRR, CANJaguar::kSpeed);
+    	driveRF=new CANJaguar(CanNumRF); // Temporarily no encoders on Right side
+    	driveRR=new CANJaguar(CanNumRR);
+    	kicker=new CANJaguar(CanNumKick, CANJaguar::kPosition);
 
     	driveLF->SetPID(PID_P, PID_I, PID_D);
     	driveLR->SetPID(PID_P, PID_I, PID_D);
-    	driveRF->SetPID(PID_P, PID_I, PID_D);
-    	driveRR->SetPID(PID_P, PID_I, PID_D);
+    	//driveRF->SetPID(PID_P, PID_I, PID_D);
+    	//driveRR->SetPID(PID_P, PID_I, PID_D);
+    	kicker->SetPID(PID_P, PID_I, PID_D);
 
     	driveLF->ConfigEncoderCodesPerRev(EncoderPulses); // Assume pulses = Codes
     	driveLR->ConfigEncoderCodesPerRev(EncoderPulses);
-    	driveRF->ConfigEncoderCodesPerRev(EncoderPulses);
-    	driveRR->ConfigEncoderCodesPerRev(EncoderPulses);
+    	//driveRF->ConfigEncoderCodesPerRev(EncoderPulses);
+    	//driveRR->ConfigEncoderCodesPerRev(EncoderPulses);
+    	kicker->ConfigEncoderCodesPerRev(KickerPulses);
     	
     	driveLF->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
     	driveLR->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
-    	driveRF->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
-    	driveRR->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
+    	//driveRF->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
+    	//driveRR->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
+    	kicker->SetPositionReference(CANJaguar::kPosRef_QuadEncoder);
     	
     	driveLF->EnableControl();
     	driveLR->EnableControl();
     	driveRF->EnableControl();
     	driveRR->EnableControl(); 
+    	kicker->EnableControl(0); // 0 as initial position. May be unnecessary to define this.
     	
     	// Init Robotdrive
-    	cDrive = new RobotDrive(driveLF, driveLR, driveRF, driveRR);
+    	cDrive = new EncodedRobotDrive(driveLF, driveLR, driveRF, driveRR);
+    	cDrive->SetMaxSpeed(10); // Set max speed to 10 ft/s default
         cDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,false);
         cDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,false);
         cDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
@@ -155,11 +173,10 @@ public:
         line6=DriverStationLCD::kUser_Line6;
         
         // Print version info
-        display->PrintfLine(line2, "Lock Ness Driving");
+        display->PrintfLine(line2, "Kicker test");
         display->UpdateLCD();        
-        Preferences::GetInstance()->PutInt("TestNumber", 1);
-        Preferences::GetInstance()->PutBoolean("TestBool", false);
-        display->PrintfLine(line3, "Doop");
+        //Preferences::GetInstance()->PutInt("TestNumber", 1);
+        display->PrintfLine(line3, "Yay");
         display->UpdateLCD();
                 
     }
@@ -173,6 +190,7 @@ public:
 #define RADIUS_TARGET       (60)
 #define RADIUS_THRESHOLD    (20)
     	
+    	// TODO set cDrive max speed to desired value.
         while(IsAutonomous()&&IsEnabled()) {
             ImageData data;
             iaClient.copyImageData(&data);
@@ -224,51 +242,22 @@ public:
     }
 
 
-    /**
-     * Runs the motors with arcade steering.
-     */
     void OperatorControl() {
         //    myRobot.SetSafetyEnabled(true);
     			// Is this important?
     	
-    	// TODO consider floats vs doubles
-    	double x, y;
-    	double speedMod; // Speed modifier
+    	
+    	// TODO set cDrive max speed to a desirable value
     	
         while (IsOperatorControl()&&IsEnabled()) {
-        	speedMod=.65;
-        	if(driveStick.GetRawButton(BumperR)) // Hold Right bumper to go at full speed
-        		speedMod=1;
-        	if(driveStick.GetRawButton(BumperL)) // Hold Left bumper to go at 30% or 1/2 normal speed
-        		speedMod=.5; // Is checked second so in case both bumpers are held, slower speed is used
-        	
-        	x=-driveStick.GetRawAxis(LeftX); 
-        	  // Inverting x because the robot was turning the wrong way
-        	
-        	y=-driveStick.GetRawAxis(LeftY); 
-        	  // The xbox controller uses down as positive for joysticks
-        	
-        	
-        	// Using ArcadeDrive with two numbers (move and rotate) works better than passing
-        	//		the xbox joystick object, and is easier to modify to apply a speed modifier.
-            
-        	bool lock=driveStick.GetRawButton(ButtonA);
-        	if(lock)
-        		x=0;
-        	
-        	cDrive->ArcadeDrive(speedMod*y, speedMod*x);
-
-        	int test=Preferences::GetInstance()->GetInt("TestNumber");
-        	
         	display->PrintfLine(line1, "Teleop");
-        	display->PrintfLine(line2, "TestNumber: %d", test);
-            display->PrintfLine(line3, "Move: %f", speedMod*y);
-            display->PrintfLine(line4, "Rotate: %f", speedMod*x);
+        	
+        	DriveIterate();
+        	KickerTest();
     		
-                        
             display->UpdateLCD();
+            display->Clear();
             
-            Wait(0.005);                // wait for a motor update time
         }
 
         driveLF->Set(0);
@@ -277,7 +266,52 @@ public:
         driveRR->Set(0);
         
     }
+    
+    void KickerTest(){
+    	float value=driveStick.GetRawAxis(RightX);
+    	if(fabs(value)<0.08)
+    		value=0;
+    	if(value<0)
+    		kicker->Set(0.25);
+    	if(value>0)
+    		kicker->Set(-.25);
+    	if(value==0)
+    		kicker->Set(0);
+    	
+    	display->PrintfLine(line6, "Test: %f", value);
+    	
+    }
+    
+    void DriveIterate(){
+    	float x, y;
+    	float speedMod; // Speed modifier
+    	speedMod=.65;
+    	if(driveStick.GetRawButton(BumperR)) // Hold Right bumper to go at full speed
+    		speedMod=1;
+    	if(driveStick.GetRawButton(BumperL)) // Hold Left bumper to go at 30% or 1/2 normal speed
+    		speedMod=.5; // Is checked second so in case both bumpers are held, slower speed is used
+    	
+    	x=-driveStick.GetRawAxis(LeftX); 
+    	  // Inverting x because the robot was turning the wrong way
+    	
+    	y=-driveStick.GetRawAxis(LeftY); 
+    	  // The xbox controller uses down as positive for joysticks
+    	
+    	
+    	bool lock=driveStick.GetRawButton(ButtonA);
+    	
+    	if(lock)
+    		x=0;
+    	cDrive->ArcadeDrive(speedMod*y, speedMod*x);
+    	
+        display->PrintfLine(line2, "Move: %f", speedMod*y);
+        if(lock)
+        	display->PrintfLine(line3, "Rotation locked");
+        else display->PrintfLine(line3, "Rotate: %f", speedMod*x);
+        display->PrintfLine(line4, "Encode: %f", (float)driveLF->GetSpeed());
+    }
 
+    
     /**
      * Runs during test mode
      */
