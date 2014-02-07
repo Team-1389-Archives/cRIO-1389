@@ -29,6 +29,7 @@
 #define CanNumRF			(3) // Right Front motor CAN number
 #define CanNumRR			(4) // Right  Rear motor CAN number
 #define CanNumKick			(5) // Kicker motor CAN number
+#define CanNumRamp			(6) // Ramp motor CAN number
 
 // Drive Motor Ports
 #define DriveMotorLF		(1) //  Left Front motor port
@@ -36,6 +37,8 @@
 #define DriveMotorRF		(3) // Right Front motor port
 #define DriveMotorRR		(4) // Right  Rear motor port
 
+// Victor (pwm) ports
+#define VicTower			(1) // Tower motor PWM port
 
 // TODO remove Encoder macros when we verify we can just use CANJaguar motor control
 // Encoder Channel numbers
@@ -89,9 +92,11 @@ public:
     }
 
     void SetLeftRightMotorOutputs(float leftOutput, float rightOutput) {
-        jag1->Set(speed*leftOutput);
-        jag2->Set(speed*leftOutput);
-        jag3->Set(rightOutput); // TODO repeat this for right side
+    	leftOutput*=1;// TODO speed; 
+    	rightOutput*=1;// speed;
+        jag1->Set(leftOutput);
+        jag2->Set(leftOutput);
+        jag3->Set(rightOutput);
         jag4->Set(rightOutput);
         
         DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line5, "Target: %f", speed*leftOutput);
@@ -106,12 +111,12 @@ class RobotDemo : public SimpleRobot {
     
     Joystick driveStick, funcStick; // The two XBOX controllers
     
-    
-    
     ImageAnalysisClient iaClient;
 
     CANJaguar *driveLF, *driveLR, *driveRF, *driveRR;
-    CANJaguar *kicker;
+    CANJaguar *kicker, *ramp;
+    
+    Victor *tower;
     
     // These save time typing out DriverStationLCD repeatedly for displays
     DriverStationLCD *display;
@@ -123,13 +128,16 @@ public:
         funcStick(ControllerB),
         iaClient(IMAGE_ANALYSIS_SERVER_IP, IMAGE_ANALYSIS_SERVER_PORT){
 
-    	// CANJaguar setup
-    	driveLF=new CANJaguar(CanNumLF, CANJaguar::kSpeed);
-    	driveLR=new CANJaguar(CanNumLR, CANJaguar::kSpeed);
+    	// CANJaguar setup TODO enable encoders
+    	driveLF=new CANJaguar(CanNumLF);//, CANJaguar::kSpeed);
+    	driveLR=new CANJaguar(CanNumLR);//, CANJaguar::kSpeed);
     	driveRF=new CANJaguar(CanNumRF); // Temporarily no encoders on Right side
     	driveRR=new CANJaguar(CanNumRR);
-    	kicker=new CANJaguar(CanNumKick, CANJaguar::kPosition);
-
+    	kicker=new CANJaguar(CanNumKick);//, CANJaguar::kPosition);
+    	ramp=new CANJaguar(CanNumRamp);
+    	
+    	/* TODO re-enable encoders
+    	
     	driveLF->SetPID(PID_P, PID_I, PID_D);
     	driveLR->SetPID(PID_P, PID_I, PID_D);
     	//driveRF->SetPID(PID_P, PID_I, PID_D);
@@ -146,13 +154,14 @@ public:
     	driveLR->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
     	//driveRF->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
     	//driveRR->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
-    	kicker->SetPositionReference(CANJaguar::kPosRef_QuadEncoder);
+    	kicker->SetPositionReference(CANJaguar::kPosRef_QuadEncoder); //*/// Quick disabling of encoders
     	
     	driveLF->EnableControl();
     	driveLR->EnableControl();
     	driveRF->EnableControl();
     	driveRR->EnableControl(); 
     	kicker->EnableControl(0); // 0 as initial position. May be unnecessary to define this.
+    	ramp->EnableControl(); // May be unnecessary for an encoderless can jag
     	
     	// Init Robotdrive
     	cDrive = new EncodedRobotDrive(driveLF, driveLR, driveRF, driveRR);
@@ -162,7 +171,11 @@ public:
         cDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
         cDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,false);
         cDrive->SetExpiration(0.1);
- 
+        
+        // Victor setup
+        tower=new Victor(VicTower);
+        
+        
         // Driverstation Display shortcuts
         display=DriverStationLCD::GetInstance();
         line1=DriverStationLCD::kUser_Line1;
@@ -173,10 +186,10 @@ public:
         line6=DriverStationLCD::kUser_Line6;
         
         // Print version info
-        display->PrintfLine(line2, "Kicker test");
+        display->PrintfLine(line2, "Encoder-less test");
         display->UpdateLCD();        
         //Preferences::GetInstance()->PutInt("TestNumber", 1);
-        display->PrintfLine(line3, "Yay");
+        display->PrintfLine(line3, "They took off spinny");
         display->UpdateLCD();
                 
     }
@@ -267,14 +280,15 @@ public:
         
     }
     
+    
     void KickerTest(){
     	float value=driveStick.GetRawAxis(RightX);
     	if(fabs(value)<0.08)
     		value=0;
     	if(value<0)
-    		kicker->Set(0.25);
+    		kicker->Set(0.55); // TODO reset to position
     	if(value>0)
-    		kicker->Set(-.25);
+    		kicker->Set(-.55);
     	if(value==0)
     		kicker->Set(0);
     	
