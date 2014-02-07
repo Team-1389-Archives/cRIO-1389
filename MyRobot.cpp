@@ -106,17 +106,13 @@ public:
 
 class RobotDemo : public SimpleRobot {
 	
-    EncodedRobotDrive* cDrive; // Generic robotdrive object for 4 jags
-    
     
     Joystick driveStick, funcStick; // The two XBOX controllers
     
     ImageAnalysisClient iaClient;
 
-    CANJaguar *driveLF, *driveLR, *driveRF, *driveRR;
-    CANJaguar *kicker, *ramp;
+    CANJaguar *kickerL, *kickerR;
     
-    Victor *tower;
     
     // These save time typing out DriverStationLCD repeatedly for displays
     DriverStationLCD *display;
@@ -128,13 +124,8 @@ public:
         funcStick(ControllerB),
         iaClient(IMAGE_ANALYSIS_SERVER_IP, IMAGE_ANALYSIS_SERVER_PORT){
 
-    	// CANJaguar setup TODO enable encoders
-    	driveLF=new CANJaguar(CanNumLF);//, CANJaguar::kSpeed);
-    	driveLR=new CANJaguar(CanNumLR);//, CANJaguar::kSpeed);
-    	driveRF=new CANJaguar(CanNumRF); // Temporarily no encoders on Right side
-    	driveRR=new CANJaguar(CanNumRR);
-    	kicker=new CANJaguar(CanNumKick);//, CANJaguar::kPosition);
-    	ramp=new CANJaguar(CanNumRamp);
+    	kickerL=new CANJaguar(-1);//, CANJaguar::kPosition);
+    	kickerR=new CANJaguar(-2);
     	
     	/* TODO re-enable encoders
     	
@@ -156,25 +147,9 @@ public:
     	//driveRR->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
     	kicker->SetPositionReference(CANJaguar::kPosRef_QuadEncoder); //*/// Quick disabling of encoders
     	
-    	driveLF->EnableControl();
-    	driveLR->EnableControl();
-    	driveRF->EnableControl();
-    	driveRR->EnableControl(); 
-    	kicker->EnableControl(0); // 0 as initial position. May be unnecessary to define this.
-    	ramp->EnableControl(); // May be unnecessary for an encoderless can jag
+    	kickerL->EnableControl(); // 0 as initial position. May be unnecessary to define this.
+    	kickerR->EnableControl();
     	
-    	// Init Robotdrive
-    	cDrive = new EncodedRobotDrive(driveLF, driveLR, driveRF, driveRR);
-    	cDrive->SetMaxSpeed(10); // Set max speed to 10 ft/s default
-        cDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,false);
-        cDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,false);
-        cDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
-        cDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,false);
-        cDrive->SetExpiration(0.1);
-        
-        // Victor setup
-        tower=new Victor(VicTower);
-        
         
         // Driverstation Display shortcuts
         display=DriverStationLCD::GetInstance();
@@ -186,10 +161,10 @@ public:
         line6=DriverStationLCD::kUser_Line6;
         
         // Print version info
-        display->PrintfLine(line2, "Encoder-less test");
+        display->PrintfLine(line2, "Just kick it");
         display->UpdateLCD();        
         //Preferences::GetInstance()->PutInt("TestNumber", 1);
-        display->PrintfLine(line3, "They took off spinny");
+        display->PrintfLine(line3, ".-.");
         display->UpdateLCD();
                 
     }
@@ -212,26 +187,7 @@ public:
             float move=0;
             float rotate=0;
             
-            /*
-            if(fabs(data.x-CENTER_LINE)>CENTER_THRESHOLD) {
-                if(data.x<CENTER_LINE) {
-                    rotate=1.0;
-                } else {
-                    rotate=-1.0;
-                }
-            }
-            if(fabs(data.radius-RADIUS_TARGET)>RADIUS_THRESHOLD) {
-                if(data.radius>RADIUS_THRESHOLD) {
-                    move=1.0;
-                } else {
-                    move=-1.0;
-                }
-            }
-            
-            display->PrintfLine(line3, "Move: %d", move);
-            display->PrintfLine(line4, "Rotate: %d", rotate);
-            //*/
-            int test=Preferences::GetInstance()->GetInt("TestNumber");
+            int test=0;
             
             display->PrintfLine(line3, "Test: %d", test);
                         
@@ -243,14 +199,9 @@ public:
             display->PrintfLine(line5, "Rotate: %f", rotate);
                         
             display->UpdateLCD();
-            cDrive->ArcadeDrive(move, rotate);
             
         }
         
-        driveLF->Set(0);
-        driveLR->Set(0);
-        driveRF->Set(0);
-        driveRR->Set(0);
         
     }
 
@@ -263,9 +214,8 @@ public:
     	// TODO set cDrive max speed to a desirable value
     	
         while (IsOperatorControl()&&IsEnabled()) {
-        	display->PrintfLine(line1, "Teleop");
+        	display->PrintfLine(line1, "Telobop");
         	
-        	DriveIterate();
         	KickerTest();
     		
             display->UpdateLCD();
@@ -273,10 +223,6 @@ public:
             
         }
 
-        driveLF->Set(0);
-        driveLR->Set(0);
-        driveRF->Set(0);
-        driveRR->Set(0);
         
     }
     
@@ -285,46 +231,22 @@ public:
     	float value=driveStick.GetRawAxis(RightX);
     	if(fabs(value)<0.08)
     		value=0;
-    	if(value<0)
-    		kicker->Set(0.55); // TODO reset to position
-    	if(value>0)
-    		kicker->Set(-.55);
-    	if(value==0)
-    		kicker->Set(0);
+    	if(value<0){
+    		kickerL->Set(0.55); // TODO reset to position
+    		kickerR->Set(0.55);
+    	}
+    	if(value>0){
+    		kickerL->Set(-.55);
+    		kickerR->Set(-.55);
+    	}
+    	if(value==0){
+    		kickerL->Set(0);
+    		kickerR->Set(0);
+    	}
     	
     	display->PrintfLine(line6, "Test: %f", value);
     	
     }
-    
-    void DriveIterate(){
-    	float x, y;
-    	float speedMod; // Speed modifier
-    	speedMod=.65;
-    	if(driveStick.GetRawButton(BumperR)) // Hold Right bumper to go at full speed
-    		speedMod=1;
-    	if(driveStick.GetRawButton(BumperL)) // Hold Left bumper to go at 30% or 1/2 normal speed
-    		speedMod=.5; // Is checked second so in case both bumpers are held, slower speed is used
-    	
-    	x=-driveStick.GetRawAxis(LeftX); 
-    	  // Inverting x because the robot was turning the wrong way
-    	
-    	y=-driveStick.GetRawAxis(LeftY); 
-    	  // The xbox controller uses down as positive for joysticks
-    	
-    	
-    	bool lock=driveStick.GetRawButton(ButtonA);
-    	
-    	if(lock)
-    		x=0;
-    	cDrive->ArcadeDrive(speedMod*y, speedMod*x);
-    	
-        display->PrintfLine(line2, "Move: %f", speedMod*y);
-        if(lock)
-        	display->PrintfLine(line3, "Rotation locked");
-        else display->PrintfLine(line3, "Rotate: %f", speedMod*x);
-        display->PrintfLine(line4, "Encode: %f", (float)driveLF->GetSpeed());
-    }
-
     
     /**
      * Runs during test mode
@@ -338,11 +260,6 @@ public:
     	}
 
 
-        driveLF->Set(0);
-        driveLR->Set(0);
-        driveRF->Set(0);
-        driveRR->Set(0);
-        
     }
 };
 
