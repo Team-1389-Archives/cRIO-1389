@@ -24,12 +24,12 @@
 #define RightX				(4) // XBox Controller Right X Axis number
 
 // CAN Jaguar Numbers
-#define CanNumLF			(1) //  Left Front motor CAN number
-#define CanNumLR			(2) //  Left  Rear motor CAN number
-#define CanNumRF			(3) // Right Front motor CAN number
-#define CanNumRR			(4) // Right  Rear motor CAN number
-#define CanNumKick			(5) // Kicker motor CAN number
-#define CanNumRamp			(6) // Ramp motor CAN number
+#define CanNumLF			(2) //  Left Front motor CAN number
+#define CanNumLR			(3) //  Left  Rear motor CAN number
+#define CanNumRF			(4) // Right Front motor CAN number
+#define CanNumRR			(5) // Right  Rear motor CAN number
+#define CanNumKick			(6) // Kicker motor CAN number
+#define CanNumRamp			(7) // Ramp motor CAN number
 
 // Drive Motor Ports
 #define DriveMotorLF		(1) //  Left Front motor port
@@ -114,9 +114,9 @@ class RobotDemo : public SimpleRobot {
     ImageAnalysisClient iaClient;
 
     CANJaguar *driveLF, *driveLR, *driveRF, *driveRR;
-    CANJaguar *kicker, *ramp;
+    //CANJaguar *kicker, *ramp;
     
-    Victor *tower;
+    //Victor *tower;
     
     // These save time typing out DriverStationLCD repeatedly for displays
     DriverStationLCD *display;
@@ -133,8 +133,8 @@ public:
     	driveLR=new CANJaguar(CanNumLR);//, CANJaguar::kSpeed);
     	driveRF=new CANJaguar(CanNumRF); // Temporarily no encoders on Right side
     	driveRR=new CANJaguar(CanNumRR);
-    	kicker=new CANJaguar(CanNumKick);//, CANJaguar::kPosition);
-    	ramp=new CANJaguar(CanNumRamp);
+    	//kicker=new CANJaguar(CanNumKick);//, CANJaguar::kPosition);
+    	//ramp=new CANJaguar(CanNumRamp);
     	
     	/* TODO re-enable encoders
     	
@@ -160,8 +160,8 @@ public:
     	driveLR->EnableControl();
     	driveRF->EnableControl();
     	driveRR->EnableControl(); 
-    	kicker->EnableControl(0); // 0 as initial position. May be unnecessary to define this.
-    	ramp->EnableControl(); // May be unnecessary for an encoderless can jag
+    	//kicker->EnableControl(0); // 0 as initial position. May be unnecessary to define this.
+    	//ramp->EnableControl(); // May be unnecessary for an encoderless can jag
     	
     	// Init Robotdrive
     	cDrive = new EncodedRobotDrive(driveLF, driveLR, driveRF, driveRR);
@@ -173,7 +173,7 @@ public:
         cDrive->SetExpiration(0.1);
         
         // Victor setup
-        tower=new Victor(VicTower);
+        //tower=new Victor(VicTower);
         
         
         // Driverstation Display shortcuts
@@ -186,10 +186,10 @@ public:
         line6=DriverStationLCD::kUser_Line6;
         
         // Print version info
-        display->PrintfLine(line2, "Encoder-less test");
+        display->PrintfLine(line2, "CAN update");
         display->UpdateLCD();        
         //Preferences::GetInstance()->PutInt("TestNumber", 1);
-        display->PrintfLine(line3, "They took off spinny");
+        display->PrintfLine(line3, "no encoders :/");
         display->UpdateLCD();
                 
     }
@@ -266,7 +266,7 @@ public:
         	display->PrintfLine(line1, "Teleop");
         	
         	DriveIterate();
-        	KickerTest();
+        	//KickerTest();
     		
             display->UpdateLCD();
             display->Clear();
@@ -283,6 +283,7 @@ public:
     
     void KickerTest(){
     	float value=driveStick.GetRawAxis(RightX);
+    	/*
     	if(fabs(value)<0.08)
     		value=0;
     	if(value<0)
@@ -290,7 +291,7 @@ public:
     	if(value>0)
     		kicker->Set(-.55);
     	if(value==0)
-    		kicker->Set(0);
+    		kicker->Set(0);//*/
     	
     	display->PrintfLine(line6, "Test: %f", value);
     	
