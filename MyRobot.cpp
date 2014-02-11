@@ -24,10 +24,10 @@
 #define RightX				(4) // XBox Controller Right X Axis number
 
 // CAN Jaguar Numbers
-#define CanNumLF			(2) //  Left Front motor CAN number
-#define CanNumLR			(3) //  Left  Rear motor CAN number
-#define CanNumRF			(4) // Right Front motor CAN number
-#define CanNumRR			(5) // Right  Rear motor CAN number
+#define CanNumLF			(1) //  Left Front motor CAN number
+#define CanNumLR			(2) //  Left  Rear motor CAN number
+#define CanNumRF			(3) // Right Front motor CAN number
+#define CanNumRR			(4) // Right  Rear motor CAN number
 #define CanNumKick			(6) // Kicker motor CAN number
 #define CanNumRamp			(7) // Ramp motor CAN number
 
@@ -93,7 +93,7 @@ public:
 
     void SetLeftRightMotorOutputs(float leftOutput, float rightOutput) {
     	leftOutput*=1;// TODO speed; 
-    	rightOutput*=1;// speed;
+    	rightOutput*=-1;// speed;
         jag1->Set(leftOutput);
         jag2->Set(leftOutput);
         jag3->Set(rightOutput);
@@ -116,7 +116,7 @@ class RobotDemo : public SimpleRobot {
     CANJaguar *driveLF, *driveLR, *driveRF, *driveRR;
     //CANJaguar *kicker, *ramp;
     
-    //Victor *tower;
+    Victor *tower;
     
     // These save time typing out DriverStationLCD repeatedly for displays
     DriverStationLCD *display;
@@ -168,12 +168,12 @@ public:
     	cDrive->SetMaxSpeed(10); // Set max speed to 10 ft/s default
         cDrive->SetInvertedMotor(RobotDrive::kFrontLeftMotor,false);
         cDrive->SetInvertedMotor(RobotDrive::kRearLeftMotor,false);
-        cDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,false);
-        cDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,false);
+        cDrive->SetInvertedMotor(RobotDrive::kFrontRightMotor,true);
+        cDrive->SetInvertedMotor(RobotDrive::kRearRightMotor,true);
         cDrive->SetExpiration(0.1);
         
         // Victor setup
-        //tower=new Victor(VicTower);
+        tower=new Victor(VicTower);
         
         
         // Driverstation Display shortcuts
@@ -186,18 +186,16 @@ public:
         line6=DriverStationLCD::kUser_Line6;
         
         // Print version info
-        display->PrintfLine(line2, "CAN update");
+        display->PrintfLine(line2, "Client test 2");
         display->UpdateLCD();        
         //Preferences::GetInstance()->PutInt("TestNumber", 1);
-        display->PrintfLine(line3, "no encoders :/");
+        display->PrintfLine(line3, "Autocats assemble");
         display->UpdateLCD();
                 
     }
 
     void Autonomous() {
-//These macros are for testing purposes only 
-    				// Why?
-    	
+//These macros are temporary
 #define CENTER_LINE         (320)
 #define CENTER_THRESHOLD    (20)
 #define RADIUS_TARGET       (60)
@@ -207,43 +205,11 @@ public:
         while(IsAutonomous()&&IsEnabled()) {
             ImageData data;
             iaClient.copyImageData(&data);
-            display->PrintfLine(line2, "IA: %d, %d, %d", (int)data.x, (int)data.y, (int)data.radius);
-
-            float move=0;
-            float rotate=0;
-            
-            /*
-            if(fabs(data.x-CENTER_LINE)>CENTER_THRESHOLD) {
-                if(data.x<CENTER_LINE) {
-                    rotate=1.0;
-                } else {
-                    rotate=-1.0;
-                }
-            }
-            if(fabs(data.radius-RADIUS_TARGET)>RADIUS_THRESHOLD) {
-                if(data.radius>RADIUS_THRESHOLD) {
-                    move=1.0;
-                } else {
-                    move=-1.0;
-                }
-            }
-            
-            display->PrintfLine(line3, "Move: %d", move);
-            display->PrintfLine(line4, "Rotate: %d", rotate);
-            //*/
-            int test=Preferences::GetInstance()->GetInt("TestNumber");
-            
-            display->PrintfLine(line3, "Test: %d", test);
-                        
-            if(test==1)
-            	move=1;
-            if(test==2)
-            	rotate=1;
-            display->PrintfLine(line4, "Move: %f", move);
-            display->PrintfLine(line5, "Rotate: %f", rotate);
-                        
+            display->PrintfLine(line2, "X: %f", data.x);
+            display->PrintfLine(line3, "Y: %f", data.y);
+            display->PrintfLine(line4, "R: %f", data.radius);
+            display->PrintfLine(line5, "(^w^)");
             display->UpdateLCD();
-            cDrive->ArcadeDrive(move, rotate);
             
         }
         
@@ -266,7 +232,7 @@ public:
         	display->PrintfLine(line1, "Teleop");
         	
         	DriveIterate();
-        	//KickerTest();
+        	TowerTest();
     		
             display->UpdateLCD();
             display->Clear();
@@ -278,6 +244,16 @@ public:
         driveRF->Set(0);
         driveRR->Set(0);
         
+    }
+    
+    void TowerTest(){
+    	float value=driveStick.GetRawAxis(RightY);
+    	if(fabs(value)<0.08)
+    		value=0;
+    	
+    	tower->Set(value);
+
+        display->PrintfLine(line6, "Blocker: %f", value);
     }
     
     

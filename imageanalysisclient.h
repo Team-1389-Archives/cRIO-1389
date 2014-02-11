@@ -3,9 +3,9 @@
 #include <pthread.h>
 #include <WPILib.h>
 
-#define IMAGE_ANALYSIS_SERVER_IP		("10.13.89.9")
+#define IMAGE_ANALYSIS_SERVER_IP		("10.13.89.10")
 //See the FIRST FMS White Paper to find out what ports are available http://bitly.com/1abqwix
-#define IMAGE_ANALYSIS_SERVER_PORT		(443)
+#define IMAGE_ANALYSIS_SERVER_PORT		(8080)
 
 struct ImageData {
     float x;
