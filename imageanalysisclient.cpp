@@ -103,6 +103,7 @@ void ImageAnalysisClient::_threadEntry() {
 	
 	
     FILE *f;
+    char buffer[1024];
     int sock=socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in dst;
     memset(static_cast<void*>(&dst), 0, sizeof(dst));
