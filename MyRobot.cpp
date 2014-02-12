@@ -180,10 +180,10 @@ public:
         line6=DriverStationLCD::kUser_Line6;
         
         // Print version info
-        display->PrintfLine(line2, "Drive encoder test 2");
+        display->PrintfLine(line2, "Client test");
         display->UpdateLCD();        
         //Preferences::GetInstance()->PutInt("TestNumber", 1);
-        display->PrintfLine(line3, "Work plser");
+        display->PrintfLine(line3, "^w^");
         display->UpdateLCD();
                 
     }
@@ -205,7 +205,7 @@ public:
             display->PrintfLine(line5, "(^w^)");
             display->UpdateLCD();
             
-        }
+        } 
         
         driveLF->Set(0);
         driveLR->Set(0);
