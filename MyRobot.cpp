@@ -195,6 +195,7 @@ public:
 #define RADIUS_TARGET       (60)
 #define RADIUS_THRESHOLD    (20)
     	
+    	
     	// TODO set cDrive max speed to desired value.
         while(IsAutonomous()&&IsEnabled()) {
             ImageData data;
@@ -205,12 +206,17 @@ public:
             display->PrintfLine(line5, "(^w^)");
             display->UpdateLCD();
             
+            cDrive->ArcadeDrive(0.0f, 0.0f);
+            if (data.radius > 10.0f){
+            	if (data.x < 150)
+            		cDrive->ArcadeDrive(0.5f, 0.0f);
+            
+            	if (data.x > 170)
+            		cDrive->ArcadeDrive(-0.5f, 0.0f);
+            }
+            
+            
         } 
-        
-        driveLF->Set(0);
-        driveLR->Set(0);
-        driveRF->Set(0);
-        driveRR->Set(0);
         
     }
 
