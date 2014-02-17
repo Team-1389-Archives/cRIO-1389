@@ -3,6 +3,7 @@
 #include <Math.h>
 //#include "SpeedController.h"
 #include "controller-macros.h"
+#include "robot-data.h"
 
 #define PID_P				(1.505)
 #define PID_I				(0.003)
@@ -29,20 +30,26 @@ class RobotDemo : public SimpleRobot {
     DriverStationLCD *display;
     DriveTrainMotors drive_train_motors;
     RobotDrive drive;
+    Encoder testEncoder;
 public:
     RobotDemo():
         driveStick(ControllerA),
         funcStick(ControllerB),
         iaClient(IMAGE_ANALYSIS_SERVER_IP, IMAGE_ANALYSIS_SERVER_PORT),
         drive_train_motors(1,2,3,4),//check these ports
+        
         drive(
         		drive_train_motors.frontLeft, drive_train_motors.rearLeft,
         		drive_train_motors.frontRight, drive_train_motors.rearRight
-        )
+        ),
+        testEncoder(EncoderTestA, EncoderTestB, false, Encoder::k4X)
+    	// Assuming 4X encoding
     {
-        
-        // Driverstation Display shortcuts
+    	testEncoder.Start();
         display=DriverStationLCD::GetInstance();
+        
+        display->PrintfLine(DriverStationLCD::kUser_Line2, "Restarted");
+        display->UpdateLCD();
                 
     }
 
@@ -80,6 +87,7 @@ public:
         	display->PrintfLine(DriverStationLCD::kUser_Line1, "Teleop");
         	
         	Drivetrain();
+        	EncoderTest();
         	
             display->UpdateLCD();
             Wait(0.005);
@@ -115,7 +123,10 @@ public:
         else
         	display->PrintfLine(DriverStationLCD::kUser_Line3, "Rotate: %f", speedMod*x);
     }
-
+    
+    void EncoderTest(){
+    	display->PrintfLine(DriverStationLCD::kUser_Line4, "Enc: %d", (int)testEncoder.Get());
+    }
     
     /**
      * Runs during test mode
