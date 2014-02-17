@@ -11,7 +11,7 @@
 #define EncoderPulses		(360) // Number of pulses per rotation on the drive encoders
 #define KickerPulses		(1800) // Number of pulses per rotation on the kicker encoder
 
-#define DRIVE_TRAIN_MOTORS_CONTROL_TYPE		(CANJaguar::kVoltage)
+#define DRIVE_TRAIN_MOTORS_CONTROL_TYPE		(CANJaguar::kPercentVbus)
 struct DriveTrainMotors{
 	DriveTrainMotors(int frontLeftId, int rearLeftId, int frontRightId, int rearRightId)
 		: frontLeft(frontLeftId, DRIVE_TRAIN_MOTORS_CONTROL_TYPE),
@@ -80,9 +80,9 @@ public:
         	display->PrintfLine(DriverStationLCD::kUser_Line1, "Teleop");
         	
         	Drivetrain();
-    		
+        	
             display->UpdateLCD();
-            display->Clear();
+            Wait(0.005);
         }
         drive.ArcadeDrive(0.0f, 0.0f);
     }
