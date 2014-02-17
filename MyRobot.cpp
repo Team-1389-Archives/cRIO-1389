@@ -15,9 +15,9 @@
 struct DriveTrainMotors{
 	DriveTrainMotors(int frontLeftId, int rearLeftId, int frontRightId, int rearRightId)
 		: frontLeft(frontLeftId, DRIVE_TRAIN_MOTORS_CONTROL_TYPE),
-		  rearLeft(frontLeftId, DRIVE_TRAIN_MOTORS_CONTROL_TYPE),
-		  frontRight(frontLeftId, DRIVE_TRAIN_MOTORS_CONTROL_TYPE),
-		  rearRight(frontLeftId, DRIVE_TRAIN_MOTORS_CONTROL_TYPE)
+		  rearLeft(rearLeftId, DRIVE_TRAIN_MOTORS_CONTROL_TYPE),
+		  frontRight(frontRightId, DRIVE_TRAIN_MOTORS_CONTROL_TYPE),
+		  rearRight(rearRightId, DRIVE_TRAIN_MOTORS_CONTROL_TYPE)
 	{}
 	virtual ~DriveTrainMotors(){}
 	CANJaguar frontLeft, rearLeft, frontRight, rearRight;
