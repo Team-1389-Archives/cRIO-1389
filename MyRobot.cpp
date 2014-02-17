@@ -11,35 +11,14 @@
 #define EncoderPulses		(360) // Number of pulses per rotation on the drive encoders
 #define KickerPulses		(1800) // Number of pulses per rotation on the kicker encoder
 
-#define DRIVE_TRAIN_MOTORS_CONTROL_TYPE		(CANJaguar::kSpeed)
+#define DRIVE_TRAIN_MOTORS_CONTROL_TYPE		(CANJaguar::kPercentVbus)
 struct DriveTrainMotors{
 	DriveTrainMotors(int frontLeftId, int rearLeftId, int frontRightId, int rearRightId)
 		: frontLeft(frontLeftId, DRIVE_TRAIN_MOTORS_CONTROL_TYPE),
 		  rearLeft(rearLeftId, DRIVE_TRAIN_MOTORS_CONTROL_TYPE),
 		  frontRight(frontRightId, DRIVE_TRAIN_MOTORS_CONTROL_TYPE),
 		  rearRight(rearRightId, DRIVE_TRAIN_MOTORS_CONTROL_TYPE)
-	{
-		//stuff to set up PID
-		frontLeft.setPID(0.4, 0.005, 0.0);
-		rearLeft.setPID(0.4, 0.005, 0.0);
-		frontRight.setPID(0.4, 0.005, 0.0);
-		rearRight.setPID(0.4, 0.005, 0.0);
-		
-		frontLeft.ConfigEncoderCodesPerRev(360);
-		rearLeft.ConfigEncoderCodesPerRev(360);
-		frontRight.ConfigEncoderCodesPerRev(360);
-		rearRight.ConfigEncoderCodesPerRev(360);
-		
-		frontLeft.SetSpeedReference(CANJaguar::kSpeedRef_Encoder);
-		rearLeft.SetSpeedReference(CANJaguar::kSpeedRef_Encoder);
-		frontRight.SetSpeedReference(CANJaguar::kSpeedRef_Encoder);
-		rearRight.SetSpeedReference(CANJaguar::kSpeedRef_Encoder);
-		
-		frontLeft.EnableControl();//can set initial position
-		rearLeft.EnableControl();
-		frontRight.EnableControl();
-		rearRight.EnableControl();
-	}
+	{}
 	virtual ~DriveTrainMotors(){}
 	CANJaguar frontLeft, rearLeft, frontRight, rearRight;
 };
