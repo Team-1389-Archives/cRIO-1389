@@ -31,6 +31,7 @@ class RobotDemo : public SimpleRobot {
     DriveTrainMotors drive_train_motors;
     RobotDrive drive;
     Encoder testEncoder;
+    Victor *blocker;
 public:
     RobotDemo():
         driveStick(ControllerA),
@@ -45,10 +46,18 @@ public:
         testEncoder(EncoderTestA, EncoderTestB, false, Encoder::k4X)
     	// Assuming 4X encoding
     {
+    	blocker=new Victor(6);
+    	
+    	testEncoder.SetPIDSourceParameter(PIDSource::kRate);
+    	testEncoder.SetDistancePerPulse(WheelCircumference / EncoderPulses);
+    	
     	testEncoder.Start();
+    	
+    	
         display=DriverStationLCD::GetInstance();
         
         display->PrintfLine(DriverStationLCD::kUser_Line2, "Restarted");
+        display->PrintfLine(DriverStationLCD::kUser_Line3, "Blocker Test4");
         display->UpdateLCD();
                 
     }
@@ -88,6 +97,7 @@ public:
         	
         	Drivetrain();
         	EncoderTest();
+        	TowerTest();
         	
             display->UpdateLCD();
             Wait(0.005);
@@ -125,7 +135,18 @@ public:
     }
     
     void EncoderTest(){
-    	display->PrintfLine(DriverStationLCD::kUser_Line4, "Enc: %d", (int)testEncoder.Get());
+    	if(driveStick.GetRawButton(ButtonB))
+    		testEncoder.Reset();
+    	display->PrintfLine(DriverStationLCD::kUser_Line4, "Enc: %f", (float)testEncoder.GetDistance());
+    }
+    void TowerTest(){
+    	if(driveStick.GetRawButton(ButtonX)){
+    		blocker->Set(1);
+        	display->PrintfLine(DriverStationLCD::kUser_Line5, "On");
+    	} else{
+        	display->PrintfLine(DriverStationLCD::kUser_Line5, "Off");
+    		blocker->Set(0);
+    	}
     }
     
     /**

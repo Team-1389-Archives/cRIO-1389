@@ -1,11 +1,10 @@
-#define _USE_MATH_DEFINES
-#include <Math.h>
-
 #ifndef ROBOT_DATA_H
 #define ROBOT_DATA_H
 
+#define Pi					3.14159265359 // Pi with good accuracy, because M_PI wouldn't work
+
 #define WheelDiameter		6
-#define WheelCircumference	(M_PI * WheelDiameter) // Convert diameter to circumference
+#define WheelCircumference	(Pi * WheelDiameter) // Convert diameter to circumference
 
 // Format for naming port numbers: TypeName
 
