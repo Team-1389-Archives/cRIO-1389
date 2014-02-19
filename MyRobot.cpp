@@ -46,6 +46,7 @@ class RobotDemo : public SimpleRobot {
     DigitalModule *digi;
     Victor *blocker;
     bool lowered;
+    Victor ramp;
 public:
     RobotDemo():
         driveStick(ControllerA),
@@ -57,8 +58,9 @@ public:
         		drive_train_motors.frontLeft, drive_train_motors.rearLeft,
         		drive_train_motors.frontRight, drive_train_motors.rearRight
         ),
-        testEncoder(EncoderTestA, EncoderTestB, false, Encoder::k4X)
+        testEncoder(EncoderTestA, EncoderTestB, false, Encoder::k4X),
     	// Assuming 4X encoding
+    	ramp(1, 5)
     {
     	digi=DigitalModule::GetInstance(1);
     	
@@ -116,6 +118,7 @@ public:
         	EncoderTest();
         	TowerTest();
         	KickerTest();
+        	rampTest();
         	
             display->UpdateLCD();
             Wait(0.005);
@@ -181,6 +184,7 @@ public:
     }
     
     void KickerTest(){
+ 
     	float kick=driveStick.GetRawAxis(RightY);
     	if(fabs(kick)<0.08)
     		kick=0;
@@ -188,10 +192,20 @@ public:
     		kick = 1;
     	if(kick<-0.9)
     	    kick = -1;
+    	if (!driveStick.GetRawButton(ButtonB))
+    		kick = 0;
     	kicker_motors.left.Set(kick);
     	kicker_motors.right.Set(kick);
     }
     
+    void rampTest(){
+    	float pow=driveStick.GetRawAxis(RightY);
+    	if(fabs(pow)<0.08)
+    		pow=0;
+    	if(driveStick.GetRawButton(ButtonB))
+    		pow=0;
+    	ramp.Set(pow);
+    }
     
     /**
      * Runs during test mode
