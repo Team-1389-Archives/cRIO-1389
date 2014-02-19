@@ -24,21 +24,35 @@ struct DriveTrainMotors{
 	CANJaguar frontLeft, rearLeft, frontRight, rearRight;
 };
 
+struct KickerMotors{
+	KickerMotors(int leftId, int rightId)
+	: left(leftId),
+	  right(rightId)
+	{}
+	virtual ~KickerMotors(){}
+	CANJaguar left, right;
+};
+
+
+
 class RobotDemo : public SimpleRobot {
     Joystick driveStick, funcStick; // The two XBOX controllers
     ImageAnalysisClient iaClient;
     DriverStationLCD *display;
     DriveTrainMotors drive_train_motors;
+    KickerMotors kicker_motors;
     RobotDrive drive;
     Encoder testEncoder;
+    DigitalModule *digi;
     Victor *blocker;
+    bool lowered;
 public:
     RobotDemo():
         driveStick(ControllerA),
         funcStick(ControllerB),
         iaClient(IMAGE_ANALYSIS_SERVER_IP, IMAGE_ANALYSIS_SERVER_PORT),
         drive_train_motors(1,2,3,4),//check these ports
-        
+        kicker_motors(5,6),
         drive(
         		drive_train_motors.frontLeft, drive_train_motors.rearLeft,
         		drive_train_motors.frontRight, drive_train_motors.rearRight
@@ -46,18 +60,21 @@ public:
         testEncoder(EncoderTestA, EncoderTestB, false, Encoder::k4X)
     	// Assuming 4X encoding
     {
-    	blocker=new Victor(6);
+    	digi=DigitalModule::GetInstance(1);
+    	
+    	blocker=new Victor(1, 9);
     	
     	testEncoder.SetPIDSourceParameter(PIDSource::kRate);
     	testEncoder.SetDistancePerPulse(WheelCircumference / EncoderPulses);
     	
     	testEncoder.Start();
     	
+    	lowered=true;
     	
         display=DriverStationLCD::GetInstance();
         
         display->PrintfLine(DriverStationLCD::kUser_Line2, "Restarted");
-        display->PrintfLine(DriverStationLCD::kUser_Line3, "Blocker Test4");
+        display->PrintfLine(DriverStationLCD::kUser_Line3, "Blocker v5");
         display->UpdateLCD();
                 
     }
@@ -98,6 +115,7 @@ public:
         	Drivetrain();
         	EncoderTest();
         	TowerTest();
+        	KickerTest();
         	
             display->UpdateLCD();
             Wait(0.005);
@@ -140,14 +158,40 @@ public:
     	display->PrintfLine(DriverStationLCD::kUser_Line4, "Enc: %f", (float)testEncoder.GetDistance());
     }
     void TowerTest(){
-    	if(driveStick.GetRawButton(ButtonX)){
-    		blocker->Set(1);
-        	display->PrintfLine(DriverStationLCD::kUser_Line5, "On");
+    	bool top=digi->GetDIO(12);
+    	bool bottom=digi->GetDIO(10);
+    	float tower=0;
+    	if(driveStick.GetRawButton(ButtonX)){ // If told to raise
+    		lowered=bottom;
+    		if(top){ // If touching the top
+    			tower=.2;
+    		} else{
+    			tower=1;
+    		}
     	} else{
-        	display->PrintfLine(DriverStationLCD::kUser_Line5, "Off");
-    		blocker->Set(0);
+    		if(lowered){ // If has hit the bottom
+    			tower=0;
+    		} else{
+    			tower=-.2; // Move direction opposite to raising the blocker
+    			lowered=bottom; // Set has been lowered to current bottom limit setting
+    		}
     	}
+    	display->PrintfLine(display->kUser_Line5, "T: %f", tower);
+    	blocker->Set(tower);
     }
+    
+    void KickerTest(){
+    	float kick=driveStick.GetRawAxis(RightY);
+    	if(fabs(kick)<0.08)
+    		kick=0;
+    	if(kick>0.9)
+    		kick = 1;
+    	if(kick<-0.9)
+    	    kick = -1;
+    	kicker_motors.left.Set(kick);
+    	kicker_motors.right.Set(kick);
+    }
+    
     
     /**
      * Runs during test mode
