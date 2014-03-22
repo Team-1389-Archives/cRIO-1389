@@ -15,7 +15,7 @@
 //Ramp 
 #define RampLimitUp         (1) //Ramp Limit switch for top(+) limit
 #define RampLimitDown       (2) //Ramp Limit switch for top(-) limit
-#define RampVictor 			(5) //Ramp Victor port
+#define RampVictor 			(1) //Ramp Victor port
 
 //Roller 
 #define RollerVictor		(6) //Roller Victor port
@@ -26,7 +26,8 @@
 #define RollerMoterPower    (.5) //Roller Moter Power
 
 //Umbrella 
-#define Umbrella
+#define UmbrellaSolenoidOn (3)
+#define UmbrellaSolenoidOff (4)
 
 
 #endif

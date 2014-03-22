@@ -48,10 +48,13 @@ class RobotDemo : public SimpleRobot {
 	bool lowered;
 	bool rollerOn;
 	bool buttonBDown;
+	bool umbrellaUp, xPressed, goDown;
+	int buttonPresses;
 	Victor rampV;
 	Victor rollerV;
 	DoubleSolenoid rampPnumatic1;
 	DoubleSolenoid rampPnumatic2;
+	DoubleSolenoid umbrella;
 public:
 	RobotDemo():
 		driveStick(ControllerA),
@@ -68,12 +71,13 @@ public:
 		rampV(1, RampVictor),
 		rollerV(1, RollerVictor),
 		rampPnumatic1(RollerPnumaticA1,RollerPnumaticB1),
-		rampPnumatic2(RollerPnumaticA2,RollerPnumaticB2)
+		rampPnumatic2(RollerPnumaticA2,RollerPnumaticB2),
+		umbrella(UmbrellaSolenoidOn, UmbrellaSolenoidOff)
 		{
 		digi=DigitalModule::GetInstance(1);
 
 		blocker=new Victor(1, 9);
-
+		buttonPresses = 0;
 		testEncoder.SetPIDSourceParameter(PIDSource::kRate);
 		testEncoder.SetDistancePerPulse(WheelCircumference / EncoderPulses);
 
@@ -126,6 +130,7 @@ public:
 			EncoderTest();
 			TowerTest();
 			//KickerTest();
+			umbrellaMakerAfier();
 			ramp();
 
 			display->UpdateLCD();
@@ -204,6 +209,26 @@ public:
 			kick = 0;
 		//kicker_motors.left.Set(kick);
 		//kicker_motors.right.Set(kick);
+	}
+	
+	void umbrellaMakerAfier()
+	{
+		if (funcStick.GetRawButton(ButtonX))
+			xPressed = true;
+		else 
+			xPressed = false;
+		
+		if (xPressed && !funcStick.GetRawButton(ButtonX))
+			buttonPresses += 1;
+		
+		if (buttonPresses % 1 == 0 && !buttonPresses % 2 == 0 && !buttonPresses % 3 == 0 && !buttonPresses % 4 == 0)
+			umbrella.Set(DoubleSolenoid::kForward);
+		if (buttonPresses % 2 == 0 && !buttonPresses % 4 == 0)
+			umbrella.Set(DoubleSolenoid::kOff);
+		if (buttonPresses % 3 == 0)
+			umbrella.Set(DoubleSolenoid::kReverse);
+		if (buttonPresses % 4 == 0)
+			umbrella.Set(DoubleSolenoid::kOff);
 	}
 
 	void ramp(){
