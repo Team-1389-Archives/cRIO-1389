@@ -22,7 +22,7 @@ public:
 
     void copyImageData(ImageData *data);
 
-    void _threadEntry();//This method must be public, thought it should not be called
+    void _threadEntry();//This method must be public, though it should not be called
 private:
     void setImageData(ImageData *data);
     char *m_address;
