@@ -97,7 +97,7 @@ void ImageAnalysisClient::_threadEntry() {
 #define LCD_MSG(msg)		do{m_lcd->PrintfLine(DriverStationLCD::kUser_Line1, "IA: %s", msg);	\
 							m_lcd->UpdateLCD();}while(0)
 #else
-#define LCD_ERRNO(x)        do{perror(x);abort();}while(0)
+#define LCD_ERRNO(x)        do{char __where[1024];snprintf(__where, sizeof(__where), "%s: %d: %s", __FILE__, __LINE__, (x));perror(__where);}while(0)
 #define LCD_MSG(x)          (cerr<<"MSG: "<<(x)<<endl)
 #endif
 	
@@ -113,6 +113,12 @@ void ImageAnalysisClient::_threadEntry() {
 
     if(connect(sock, (struct sockaddr*)&dst, sizeof(struct sockaddr))==-1) {
     	LCD_ERRNO("connect()");
+    	//Wait a little before retrying. This seems to solve problems.
+#ifdef COMPUTER_TEST
+    	usleep(250000);
+#else
+    	Wait(0.005);
+#endif
         return;
     }
     f=fdopen(sock, "r+");
