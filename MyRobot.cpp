@@ -240,7 +240,7 @@ public:
 	}
 	 
 	void roller(){		
-		if(driveStick.GetRawButton(ButtonB)){
+		if(funcStick.GetRawButton(ButtonB)){
 			if(!buttonBDown){
 				buttonBDown = true;
 				if(rollerOn){
