@@ -50,7 +50,8 @@ class RobotDemo : public SimpleRobot {
 	bool buttonBDown;
 	Victor rampV;
 	Victor rollerV;
-	DoubleSolenoid rampPnumatic;
+	DoubleSolenoid rampPnumatic1;
+	DoubleSolenoid rampPnumatic2;
 public:
 	RobotDemo():
 		driveStick(ControllerA),
@@ -66,7 +67,8 @@ public:
 		// Assuming 4X encoding
 		rampV(1, RampVictor),
 		rollerV(1, RollerVictor),
-		rampPnumatic(RollerPnumaticA,RollerPnumaticB)
+		rampPnumatic1(RollerPnumaticA1,RollerPnumaticB1),
+		rampPnumatic2(RollerPnumaticA2,RollerPnumaticB2)
 		{
 		digi=DigitalModule::GetInstance(1);
 
@@ -235,11 +237,14 @@ public:
 			buttonBDown = false;
 		}
 		if(funcStick.GetRawButton(ButtonA)){
-			rampPnumatic.Set(DoubleSolenoid::kForward);
+			rampPnumatic1.Set(DoubleSolenoid::kForward);
+			rampPnumatic2.Set(DoubleSolenoid::kForward);
 		}else if(funcStick.GetRawButton(ButtonY)){
-			rampPnumatic.Set(DoubleSolenoid::kReverse);
+			rampPnumatic1.Set(DoubleSolenoid::kReverse);
+			rampPnumatic2.Set(DoubleSolenoid::kReverse);
 		}else{
-			rampPnumatic.Set(DoubleSolenoid::kOff);
+			rampPnumatic1.Set(DoubleSolenoid::kOff);
+			rampPnumatic2.Set(DoubleSolenoid::kOff);
 		}
 	}
 

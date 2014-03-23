@@ -19,9 +19,14 @@
 
 //Roller 
 #define RollerVictor		(6) //Roller Victor port
-#define RollerPnumaticA     (1) //Roller Pnumatic Port
-#define RollerPnumaticB     (2) //Roller Pnumatic Port
+#define RollerPnumaticA1     (1) //Roller Pnumatic Port
+#define RollerPnumaticB1     (2) //Roller Pnumatic Port
+#define RollerPnumaticA2     (1) //Roller Pnumatic Port
+#define RollerPnumaticB2     (2) //Roller Pnumatic Port
 #define RollerMoterPower    (.5) //Roller Moter Power
+
+//Umbrella 
+#define Umbrella
 
 
 #endif
