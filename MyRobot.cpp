@@ -106,11 +106,11 @@ public:
 			display->UpdateLCD();
 
 			if (data.radius > 10.0f){
-				if (data.x < 150){
-					drive.ArcadeDrive(0.5f, 0.0f);
-					continue;
-				}else if (data.x > 170){
+				if (data.x < 120){
 					drive.ArcadeDrive(-0.5f, 0.0f);
+					continue;
+				}else if (data.x > 200){
+					drive.ArcadeDrive(0.5f, 0.0f);
 					continue;
 				}
 			}
@@ -127,11 +127,12 @@ public:
 			display->PrintfLine(DriverStationLCD::kUser_Line1, "Teleop");
 
 			Drivetrain();
-			EncoderTest();
+			//EncoderTest();
 			TowerTest();
 			//KickerTest();
 			umbrellaMakerAfier();
 			ramp();
+			roller();
 
 			display->UpdateLCD();
 			Wait(0.005);
@@ -232,22 +233,14 @@ public:
 	}
 
 	void ramp(){
-		float pow=funcStick.GetRawAxis(RightY);
-		if(fabs(pow)<0.08){
-			pow=0;
-			if(funcStick.GetRawButton(ButtonB))
-				pow=0;
-			if(pow > 0 && !digi->GetDIO(RampLimitUp)){
-				rampV.Set(pow);
-			}
-			if(pow < 0 && !digi->GetDIO(RampLimitDown)){
-				rampV.Set(pow);			
-			}
-		}
+		float pow=driveStick.GetRawAxis(RightY);
+		pow=(fabs(pow)>0.8)?pow:0.0;
+		DriverStationLCD::GetInstance()->PrintfLine(DriverStationLCD::kUser_Line6, "Ramp=%f", driveStick.GetRawAxis(RightY));
+		rampV.Set(pow);
 	}
 	 
 	void roller(){		
-		if(funcStick.GetRawButton(ButtonB)){
+		if(driveStick.GetRawButton(ButtonB)){
 			if(!buttonBDown){
 				buttonBDown = true;
 				if(rollerOn){

@@ -18,12 +18,12 @@
 #define RampVictor 			(1) //Ramp Victor port
 
 //Roller 
-#define RollerVictor		(6) //Roller Victor port
+#define RollerVictor		 (4) //Roller Victor port
 #define RollerPnumaticA1     (1) //Roller Pnumatic Port
 #define RollerPnumaticB1     (2) //Roller Pnumatic Port
 #define RollerPnumaticA2     (1) //Roller Pnumatic Port
 #define RollerPnumaticB2     (2) //Roller Pnumatic Port
-#define RollerMoterPower    (.5) //Roller Moter Power
+#define RollerMoterPower    (-1) //Roller Moter Power
 
 //Umbrella 
 #define UmbrellaSolenoidOn (3)
